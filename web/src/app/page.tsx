@@ -5,6 +5,15 @@ import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { RouteCard, type RouteOutput } from "@/components/RouteCard";
 
+const RATE_LIMITED = "RATE_LIMITED";
+
+// The firewall answers 403 before the route runs, so detect the limit here and say so plainly.
+const limitedFetch: typeof fetch = async (input, init) => {
+  const res = await fetch(input, init);
+  if (res.status === 403 || res.status === 429) throw new Error(RATE_LIMITED);
+  return res;
+};
+
 const EXAMPLES = [
   "Step-free from 1 Av to Times Sq right now?",
   "Which accessible elevators broke down most this year?",
@@ -17,7 +26,7 @@ type Part = { type: string; text?: string; state?: string; output?: unknown };
 export default function Home(): React.JSX.Element {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
+    transport: new DefaultChatTransport({ api: "/api/chat", fetch: limitedFetch }),
   });
   const busy = status === "submitted" || status === "streaming";
   const bottom = useRef<HTMLDivElement>(null);
@@ -97,7 +106,9 @@ export default function Home(): React.JSX.Element {
 
         {error && (
           <p role="alert" className="rounded-xl bg-warn-bg p-3 text-warn">
-            Something went wrong. Please try again in a moment.
+            {error.message === RATE_LIMITED
+              ? "You've asked a lot of questions in a short time. Please try again in a few minutes."
+              : "Something went wrong. Please try again in a moment."}
           </p>
         )}
         <div ref={bottom} />

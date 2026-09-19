@@ -83,6 +83,8 @@ const stepFreeRoute = tool({
       ...result,
       from: a[0].name,
       to: b[0].name,
+      fromId: a[0].complexId,
+      toId: b[0].complexId,
       otherMatches: {from: a.slice(1, 4).map((c) => c.name), to: b.slice(1, 4).map((c) => c.name)},
       travelTime: at.toISOString(),
       fetchedAt,
@@ -91,7 +93,11 @@ const stepFreeRoute = tool({
 })
 
 export async function POST(req: Request): Promise<Response> {
-  const {messages}: {messages: UIMessage[]} = await req.json()
+  const body = (await req.json().catch(() => null)) as {messages?: unknown} | null
+  if (!Array.isArray(body?.messages) || body.messages.length === 0 || body.messages.length > 50) {
+    return Response.json({error: 'Expected a non-empty messages array.'}, {status: 400})
+  }
+  const messages = body.messages as UIMessage[]
   const context = await contextTools()
   const result = streamText({
     // Plain model string routes through Vercel AI Gateway (OIDC auth on Vercel, no provider key).
