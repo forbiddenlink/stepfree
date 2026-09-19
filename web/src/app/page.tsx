@@ -1,69 +1,137 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useEffect, useRef, useState } from "react";
+import { RouteCard, type RouteOutput } from "@/components/RouteCard";
+
+const EXAMPLES = [
+  "Step-free from 1 Av to Times Sq right now?",
+  "Which accessible elevators broke down most this year?",
+  "Is the elevator at 161 St–Yankee Stadium working?",
+  "What does the 2022 ADA settlement promise, and by when?",
+];
+
+type Part = { type: string; text?: string; state?: string; output?: unknown };
+
+export default function Home(): React.JSX.Element {
+  const [input, setInput] = useState("");
+  const { messages, sendMessage, status, error } = useChat({
+    transport: new DefaultChatTransport({ api: "/api/chat" }),
+  });
+  const busy = status === "submitted" || status === "streaming";
+  const bottom = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
+
+  const send = (text: string): void => {
+    const t = text.trim();
+    if (!t || busy) return;
+    void sendMessage({ text: t });
+    setInput("");
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pb-4">
+      <header className="py-6">
+        <h1 className="text-3xl font-bold tracking-tight">StepFree</h1>
+        <p className="mt-2 text-muted">
+          The NYC subway without stairs. Live elevator outages, ten years of elevator reliability, and MTA
+          accessibility policy, in one answer.
+        </p>
+      </header>
+
+      <div aria-live="polite" aria-busy={busy} className="flex-1 space-y-4">
+        {messages.length === 0 && (
+          <section aria-label="Example questions">
+            <p className="mb-2 text-sm font-medium text-muted">Try asking</p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {EXAMPLES.map((q) => (
+                <li key={q}>
+                  <button
+                    type="button"
+                    onClick={() => send(q)}
+                    className="min-h-12 w-full rounded-xl border border-line bg-surface px-4 py-3 text-left hover:border-accent"
+                  >
+                    {q}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {messages.map((m) => (
+          <article key={m.id} aria-label={m.role === "user" ? "You" : "StepFree"} className={m.role === "user" ? "flex justify-end" : ""}>
+            <div className={m.role === "user" ? "max-w-[85%] rounded-2xl bg-accent px-4 py-2 text-white" : "w-full space-y-3"}>
+              {(m.parts as Part[]).map((p, i) => {
+                if (p.type === "text") {
+                  return (
+                    <p key={i} className="whitespace-pre-wrap leading-relaxed">
+                      {p.text}
+                    </p>
+                  );
+                }
+                if (p.type === "tool-stepFreeRoute" && p.state === "output-available") {
+                  return <RouteCard key={i} route={p.output as RouteOutput} />;
+                }
+                if (p.type.startsWith("tool-") && p.state !== "output-available") {
+                  const label = p.type.includes("guide_")
+                    ? "Reading MTA accessibility policy…"
+                    : p.type.includes("stepFreeRoute")
+                      ? "Planning a step-free route…"
+                      : "Checking live elevator data…";
+                  return (
+                    <p key={i} className="text-sm text-muted">
+                      {label}
+                    </p>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </article>
+        ))}
+
+        {error && (
+          <p role="alert" className="rounded-xl bg-warn-bg p-3 text-warn">
+            Something went wrong. Please try again in a moment.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        )}
+        <div ref={bottom} />
+      </div>
+
+      <form
+        className="sticky bottom-0 mt-4 flex gap-2 bg-background pt-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(input);
+        }}
+      >
+        <label htmlFor="q" className="sr-only">
+          Ask about a step-free trip or an elevator
+        </label>
+        <input
+          id="q"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="From 72 St to Atlantic Av, no stairs…"
+          autoComplete="off"
+          className="min-h-12 flex-1 rounded-xl border border-line bg-surface px-4 text-base"
+        />
+        <button
+          type="submit"
+          disabled={busy || !input.trim()}
+          className="min-h-12 rounded-xl bg-accent px-5 font-semibold text-white disabled:opacity-50"
+        >
+          Ask
+        </button>
+      </form>
+      <p className="mt-3 text-xs text-muted">
+        Not affiliated with the MTA. Data from MTA public feeds via Sanity. Always confirm at mta.info before you travel.
+      </p>
+    </main>
   );
 }
