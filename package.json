@@ -5,7 +5,8 @@
   "scripts": {
     "ingest:static": "tsx --env-file=.env.local ingest/static.ts",
     "ingest:outages": "tsx --env-file=.env.local ingest/outages.ts",
-    "check:context": "tsx --env-file=.env.local ingest/context-check.ts"
+    "check:context": "tsx --env-file=.env.local ingest/context-check.ts",
+    "notify": "tsx --env-file=.env.local ingest/notify.ts"
   },
   "dependencies": {
     "@sanity/client": "^7.27.0"

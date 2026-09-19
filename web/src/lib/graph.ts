@@ -24,7 +24,7 @@ export type Outage = {
 }
 export type Leg = {line: string; from: string; to: string; accessibleHops: number} // hops between ACCESSIBLE stations, not every stop
 export type RouteResult =
-  | {ok: true; legs: Leg[]; transfers: string[]; warnings: string[]; complexesUsed: string[]}
+  | {ok: true; legs: Leg[]; transfers: string[]; warnings: string[]; complexesUsed: string[]; keyComplexes: string[]}
   | {ok: false; reason: string; warnings: string[]}
 
 export const TRANSFER_COST = 3
@@ -100,7 +100,7 @@ export function findStepFreeRoute(
       )
     }
   }
-  if (fromId === toId) return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId]}
+  if (fromId === toId) return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId], keyComplexes: [fromId]}
 
   const adj = adjacency(complexes)
   // Dijkstra over (complex, line). Small graph (~340 edges): a sorted array is plenty.
@@ -148,11 +148,14 @@ export function findStepFreeRoute(
   for (let cur: State | undefined = goal; cur; cur = prev.get(key(cur))) path.unshift(cur)
   const legs: Leg[] = []
   const transfers: string[] = []
+  // Where the rider actually uses elevators: board, each transfer, alight. Watches alert on these.
+  const keyComplexes = [fromId]
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1]
     const b = path[i]
     if (a.complex === b.complex) {
       transfers.push(byId.get(a.complex)?.name ?? a.complex)
+      keyComplexes.push(a.complex)
       continue
     }
     const last = legs.at(-1)
@@ -163,5 +166,6 @@ export function findStepFreeRoute(
       legs.push({line: b.line, from: byId.get(a.complex)?.name ?? a.complex, to: byId.get(b.complex)?.name ?? b.complex, accessibleHops: 1})
     }
   }
-  return {ok: true, legs, transfers, warnings, complexesUsed: [...new Set(path.map((p) => p.complex))]}
+  keyComplexes.push(toId)
+  return {ok: true, legs, transfers, warnings, complexesUsed: [...new Set(path.map((p) => p.complex))], keyComplexes}
 }

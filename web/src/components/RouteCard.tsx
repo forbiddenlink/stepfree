@@ -1,11 +1,14 @@
 import type { Leg } from "@/lib/graph";
 import { LineBullet } from "./LineBullet";
+import { WatchForm } from "./WatchForm";
 
 export type RouteOutput = {
   ok: boolean;
   reason?: string;
   from?: string;
   to?: string;
+  fromId?: string;
+  toId?: string;
   legs?: Leg[];
   transfers?: string[];
   warnings?: string[];
@@ -69,6 +72,10 @@ export function RouteCard({ route }: { route: RouteOutput }): React.JSX.Element 
             ))}
           </ul>
         </div>
+      )}
+
+      {route.ok && route.fromId && route.toId && route.fromId !== route.toId && (
+        <WatchForm fromId={route.fromId} toId={route.toId} />
       )}
 
       <p className="mt-4 text-sm text-muted">

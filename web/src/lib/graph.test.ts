@@ -34,6 +34,14 @@ describe('findStepFreeRoute', () => {
     expect(findStepFreeRoute(noQ, out, 'A', 'C', now).ok).toBe(true)
   })
 
+  it('lists only the stations where the rider uses elevators as key complexes', () => {
+    const noQ = net.map((c) => (c.complexId === 'A' ? {...c, edges: c.edges.filter((e) => e.lines[0] !== 'Q')} : c))
+    const r = findStepFreeRoute(noQ, [], 'A', 'D', now)
+    expect(r.ok && r.keyComplexes).toEqual(['A', 'B', 'D'])
+    const through = findStepFreeRoute(net, [], 'A', 'C', now)
+    expect(through.ok && through.keyComplexes).toEqual(['A', 'C'])
+  })
+
   it('refuses stations with no accessible entrance', () => {
     const r = findStepFreeRoute(net, [], 'A', 'N', now)
     expect(r.ok).toBe(false)

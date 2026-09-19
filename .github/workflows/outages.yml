@@ -26,3 +26,8 @@ jobs:
       - run: pnpm exec tsx ingest/outages.ts
         env:
           SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+      # Separate step: a mail failure must never block the outage ingest above.
+      - run: pnpm exec tsx ingest/notify.ts
+        env:
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
