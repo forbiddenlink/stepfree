@@ -1,0 +1,1806 @@
+{
+  "id" : "rc78-7x78",
+  "name" : "MTA NYCT Subway Elevator and Escalator Availability: Beginning 2015",
+  "assetType" : "dataset",
+  "attribution" : "Metropolitan Transportation Authority",
+  "attributionLink" : "https://www.mta.info/open-data",
+  "averageRating" : 0,
+  "category" : "Transportation",
+  "createdAt" : 1643661842,
+  "description" : "The percent of the time that elevators and escalators are operational systemwide.",
+  "diciBackend" : false,
+  "displayType" : "table",
+  "downloadCount" : 3699,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "locked" : false,
+  "newBackend" : true,
+  "numberOfComments" : 0,
+  "oid" : 39853623,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1691517452,
+  "publicationGroup" : 18582036,
+  "publicationStage" : "published",
+  "rowsUpdatedAt" : 1787930346,
+  "rowsUpdatedBy" : "xzik-pf59",
+  "tableId" : 19248802,
+  "totalTimesRated" : 0,
+  "viewCount" : 12283,
+  "viewLastModified" : 1787930275,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1647452898,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 5685140,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1647452898,
+    "targetAudience" : "public",
+    "workflowId" : 2254,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "endedAt" : 1647452898,
+      "failureCount" : 0,
+      "startedAt" : 1647452898,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "28jg-4c4u",
+      "displayName" : "Open Data Administrator 1"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ {
+    "id" : 579312913,
+    "name" : "Month",
+    "dataTypeName" : "calendar_date",
+    "description" : "The month, formatted as the first day of the month in a mm/dd/yyyy format.",
+    "fieldName" : "month",
+    "position" : 1,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 147847902,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "2026-07-01T00:00:00.000",
+      "null" : "0",
+      "top" : [ {
+        "item" : "2026-06-01T00:00:00.000",
+        "count" : "691"
+      }, {
+        "item" : "2026-07-01T00:00:00.000",
+        "count" : "691"
+      }, {
+        "item" : "2026-05-01T00:00:00.000",
+        "count" : "687"
+      }, {
+        "item" : "2026-04-01T00:00:00.000",
+        "count" : "686"
+      }, {
+        "item" : "2026-02-01T00:00:00.000",
+        "count" : "685"
+      }, {
+        "item" : "2026-03-01T00:00:00.000",
+        "count" : "685"
+      }, {
+        "item" : "2026-01-01T00:00:00.000",
+        "count" : "683"
+      }, {
+        "item" : "2025-12-01T00:00:00.000",
+        "count" : "681"
+      }, {
+        "item" : "2025-11-01T00:00:00.000",
+        "count" : "677"
+      }, {
+        "item" : "2025-09-01T00:00:00.000",
+        "count" : "675"
+      }, {
+        "item" : "2025-08-01T00:00:00.000",
+        "count" : "675"
+      }, {
+        "item" : "2025-10-01T00:00:00.000",
+        "count" : "675"
+      }, {
+        "item" : "2025-07-01T00:00:00.000",
+        "count" : "672"
+      }, {
+        "item" : "2025-05-01T00:00:00.000",
+        "count" : "671"
+      }, {
+        "item" : "2025-04-01T00:00:00.000",
+        "count" : "671"
+      }, {
+        "item" : "2025-06-01T00:00:00.000",
+        "count" : "671"
+      }, {
+        "item" : "2025-03-01T00:00:00.000",
+        "count" : "670"
+      }, {
+        "item" : "2025-01-01T00:00:00.000",
+        "count" : "669"
+      }, {
+        "item" : "2025-02-01T00:00:00.000",
+        "count" : "669"
+      }, {
+        "item" : "2024-12-01T00:00:00.000",
+        "count" : "664"
+      } ],
+      "smallest" : "2015-01-01T00:00:00.000",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "view" : "date",
+      "align" : "center"
+    }
+  }, {
+    "id" : 579312894,
+    "name" : "Borough",
+    "dataTypeName" : "text",
+    "description" : "Represents one of the boroughs of New York City serviced by the subway system (Bronx, Brooklyn, Manhattan, Queens).",
+    "fieldName" : "borough",
+    "position" : 2,
+    "renderTypeName" : "text",
+    "tableColumnId" : 140735684,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "Queens",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Manhattan",
+        "count" : "48145"
+      }, {
+        "item" : "Brooklyn",
+        "count" : "14363"
+      }, {
+        "item" : "Queens",
+        "count" : "12995"
+      }, {
+        "item" : "Bronx",
+        "count" : "6882"
+      } ],
+      "smallest" : "Bronx",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : { }
+  }, {
+    "id" : 579312895,
+    "name" : "Equipment Type",
+    "dataTypeName" : "text",
+    "description" : "Whether the equipment is an elevator or an escalator.",
+    "fieldName" : "equipment_type",
+    "position" : 3,
+    "renderTypeName" : "text",
+    "tableColumnId" : 145878311,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "Escalator",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Elevator",
+        "count" : "45145"
+      }, {
+        "item" : "Escalator",
+        "count" : "37240"
+      } ],
+      "smallest" : "Elevator",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : { }
+  }, {
+    "id" : 579312897,
+    "name" : "Equipment Code",
+    "dataTypeName" : "text",
+    "description" : "The unique identification number used to reference and track individual elevators and escalators.",
+    "fieldName" : "equipment_code",
+    "position" : 4,
+    "renderTypeName" : "text",
+    "tableColumnId" : 140735698,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "ES641X",
+      "null" : "0",
+      "top" : [ {
+        "item" : "ES105",
+        "count" : "139"
+      }, {
+        "item" : "EL709",
+        "count" : "139"
+      }, {
+        "item" : "ES328",
+        "count" : "139"
+      }, {
+        "item" : "ES499X",
+        "count" : "139"
+      }, {
+        "item" : "EL279",
+        "count" : "139"
+      }, {
+        "item" : "EL342",
+        "count" : "139"
+      }, {
+        "item" : "ES430",
+        "count" : "139"
+      }, {
+        "item" : "EL232",
+        "count" : "139"
+      }, {
+        "item" : "EL220",
+        "count" : "139"
+      }, {
+        "item" : "EL234",
+        "count" : "139"
+      }, {
+        "item" : "EL130",
+        "count" : "139"
+      }, {
+        "item" : "ES121",
+        "count" : "139"
+      }, {
+        "item" : "ES338",
+        "count" : "139"
+      }, {
+        "item" : "EL376",
+        "count" : "139"
+      }, {
+        "item" : "EL121",
+        "count" : "139"
+      }, {
+        "item" : "ES422",
+        "count" : "139"
+      }, {
+        "item" : "EL238",
+        "count" : "139"
+      }, {
+        "item" : "ES242",
+        "count" : "139"
+      }, {
+        "item" : "ES447",
+        "count" : "139"
+      }, {
+        "item" : "ES350",
+        "count" : "139"
+      } ],
+      "smallest" : "EL103",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "center"
+    }
+  }, {
+    "id" : 579312900,
+    "name" : "Total Outages",
+    "dataTypeName" : "number",
+    "description" : "The total number of equipment outages.",
+    "fieldName" : "total_outages",
+    "position" : 5,
+    "renderTypeName" : "number",
+    "tableColumnId" : 140735695,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "91",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0",
+        "count" : "16227"
+      }, {
+        "item" : "2",
+        "count" : "8827"
+      }, {
+        "item" : "3",
+        "count" : "8124"
+      }, {
+        "item" : "1",
+        "count" : "7018"
+      }, {
+        "item" : "4",
+        "count" : "6853"
+      }, {
+        "item" : "5",
+        "count" : "5789"
+      }, {
+        "item" : "6",
+        "count" : "4790"
+      }, {
+        "item" : "7",
+        "count" : "3854"
+      }, {
+        "item" : "8",
+        "count" : "3180"
+      }, {
+        "item" : "9",
+        "count" : "2613"
+      }, {
+        "item" : "10",
+        "count" : "2271"
+      }, {
+        "item" : "11",
+        "count" : "1884"
+      }, {
+        "item" : "12",
+        "count" : "1592"
+      }, {
+        "item" : "13",
+        "count" : "1266"
+      }, {
+        "item" : "14",
+        "count" : "1126"
+      }, {
+        "item" : "15",
+        "count" : "999"
+      }, {
+        "item" : "16",
+        "count" : "808"
+      }, {
+        "item" : "17",
+        "count" : "720"
+      }, {
+        "item" : "18",
+        "count" : "591"
+      }, {
+        "item" : "19",
+        "count" : "519"
+      } ],
+      "smallest" : "0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312901,
+    "name" : "Scheduled Outages",
+    "dataTypeName" : "number",
+    "description" : "The number of outages where an elevator or escalator is taken out of service for scheduled maintenance.",
+    "fieldName" : "scheduled_outages",
+    "position" : 6,
+    "renderTypeName" : "number",
+    "tableColumnId" : 140735694,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "35",
+      "null" : "0",
+      "top" : [ {
+        "item" : "1",
+        "count" : "20766"
+      }, {
+        "item" : "0",
+        "count" : "19312"
+      }, {
+        "item" : "2",
+        "count" : "16513"
+      }, {
+        "item" : "3",
+        "count" : "10258"
+      }, {
+        "item" : "4",
+        "count" : "6078"
+      }, {
+        "item" : "5",
+        "count" : "3435"
+      }, {
+        "item" : "6",
+        "count" : "2071"
+      }, {
+        "item" : "7",
+        "count" : "1216"
+      }, {
+        "item" : "8",
+        "count" : "789"
+      }, {
+        "item" : "9",
+        "count" : "497"
+      }, {
+        "item" : "10",
+        "count" : "328"
+      }, {
+        "item" : "11",
+        "count" : "248"
+      }, {
+        "item" : "12",
+        "count" : "202"
+      }, {
+        "item" : "13",
+        "count" : "108"
+      }, {
+        "item" : "14",
+        "count" : "98"
+      }, {
+        "item" : "15",
+        "count" : "65"
+      }, {
+        "item" : "16",
+        "count" : "54"
+      }, {
+        "item" : "19",
+        "count" : "41"
+      }, {
+        "item" : "17",
+        "count" : "36"
+      }, {
+        "item" : "20",
+        "count" : "33"
+      } ],
+      "smallest" : "0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312902,
+    "name" : "Unscheduled Outages",
+    "dataTypeName" : "number",
+    "description" : "The number of unplanned or unexpected interruptions of elevator or escalator service.",
+    "fieldName" : "unscheduled_outages",
+    "position" : 7,
+    "renderTypeName" : "number",
+    "tableColumnId" : 140735693,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "86",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0",
+        "count" : "29273"
+      }, {
+        "item" : "1",
+        "count" : "12470"
+      }, {
+        "item" : "2",
+        "count" : "9113"
+      }, {
+        "item" : "3",
+        "count" : "6427"
+      }, {
+        "item" : "4",
+        "count" : "4823"
+      }, {
+        "item" : "5",
+        "count" : "3763"
+      }, {
+        "item" : "6",
+        "count" : "2868"
+      }, {
+        "item" : "7",
+        "count" : "2345"
+      }, {
+        "item" : "8",
+        "count" : "1845"
+      }, {
+        "item" : "9",
+        "count" : "1481"
+      }, {
+        "item" : "10",
+        "count" : "1239"
+      }, {
+        "item" : "11",
+        "count" : "1018"
+      }, {
+        "item" : "12",
+        "count" : "864"
+      }, {
+        "item" : "13",
+        "count" : "734"
+      }, {
+        "item" : "14",
+        "count" : "603"
+      }, {
+        "item" : "15",
+        "count" : "518"
+      }, {
+        "item" : "16",
+        "count" : "448"
+      }, {
+        "item" : "17",
+        "count" : "378"
+      }, {
+        "item" : "18",
+        "count" : "302"
+      }, {
+        "item" : "19",
+        "count" : "258"
+      } ],
+      "smallest" : "0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312903,
+    "name" : "Entrapments",
+    "dataTypeName" : "number",
+    "description" : "The number of entrapments.",
+    "fieldName" : "entrapments",
+    "position" : 8,
+    "renderTypeName" : "number",
+    "tableColumnId" : 140735692,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "12",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0",
+        "count" : "73114"
+      }, {
+        "item" : "1",
+        "count" : "6496"
+      }, {
+        "item" : "2",
+        "count" : "1714"
+      }, {
+        "item" : "3",
+        "count" : "650"
+      }, {
+        "item" : "4",
+        "count" : "213"
+      }, {
+        "item" : "5",
+        "count" : "110"
+      }, {
+        "item" : "6",
+        "count" : "48"
+      }, {
+        "item" : "7",
+        "count" : "22"
+      }, {
+        "item" : "8",
+        "count" : "10"
+      }, {
+        "item" : "9",
+        "count" : "4"
+      }, {
+        "item" : "10",
+        "count" : "3"
+      }, {
+        "item" : "12",
+        "count" : "1"
+      } ],
+      "smallest" : "0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312904,
+    "name" : "Time Since Major Improvement",
+    "dataTypeName" : "text",
+    "description" : "Months since the last major improvement on the asset.",
+    "fieldName" : "time_since_major_improvement",
+    "position" : 9,
+    "renderTypeName" : "text",
+    "tableColumnId" : 145878308,
+    "cachedContents" : {
+      "non_null" : "82184",
+      "largest" : "N/A",
+      "null" : "201",
+      "top" : [ {
+        "item" : "N/A",
+        "count" : "12451"
+      }, {
+        "item" : "5",
+        "count" : "188"
+      }, {
+        "item" : "3",
+        "count" : "188"
+      }, {
+        "item" : "15",
+        "count" : "188"
+      }, {
+        "item" : "16",
+        "count" : "188"
+      }, {
+        "item" : "4",
+        "count" : "188"
+      }, {
+        "item" : "8",
+        "count" : "188"
+      }, {
+        "item" : "2",
+        "count" : "188"
+      }, {
+        "item" : "18",
+        "count" : "187"
+      }, {
+        "item" : "17",
+        "count" : "187"
+      }, {
+        "item" : "1",
+        "count" : "187"
+      }, {
+        "item" : "14",
+        "count" : "187"
+      }, {
+        "item" : "11",
+        "count" : "186"
+      }, {
+        "item" : "114",
+        "count" : "186"
+      }, {
+        "item" : "9",
+        "count" : "186"
+      }, {
+        "item" : "10",
+        "count" : "186"
+      }, {
+        "item" : "6",
+        "count" : "186"
+      }, {
+        "item" : "7",
+        "count" : "186"
+      }, {
+        "item" : "111",
+        "count" : "185"
+      }, {
+        "item" : "112",
+        "count" : "184"
+      } ],
+      "smallest" : "1",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "center"
+    }
+  }, {
+    "id" : 579312920,
+    "name" : "AM Peak Availability",
+    "dataTypeName" : "number",
+    "description" : "The percent of the time that the elevator or escalator was available during the AM Peak period (6 to 10 a.m.), per month. ",
+    "fieldName" : "am_peak_availability",
+    "position" : 10,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847909,
+    "cachedContents" : {
+      "non_null" : "79828",
+      "largest" : "1.0",
+      "null" : "2557",
+      "top" : [ {
+        "item" : "1.0",
+        "count" : "33425"
+      }, {
+        "item" : "0.967741935483871",
+        "count" : "1660"
+      }, {
+        "item" : "0.9666666666666667",
+        "count" : "946"
+      }, {
+        "item" : "0.935483870967742",
+        "count" : "495"
+      }, {
+        "item" : "0.0",
+        "count" : "417"
+      }, {
+        "item" : "0.9333333333333333",
+        "count" : "298"
+      }, {
+        "item" : "0.9838709677419355",
+        "count" : "239"
+      }, {
+        "item" : "0.9032258064516129",
+        "count" : "213"
+      }, {
+        "item" : "0.9916666666666667",
+        "count" : "213"
+      }, {
+        "item" : "0.9919354838709677",
+        "count" : "205"
+      }, {
+        "item" : "0.9959677419354839",
+        "count" : "205"
+      }, {
+        "item" : "0.9958333333333333",
+        "count" : "193"
+      }, {
+        "item" : "0.9791666666666666",
+        "count" : "191"
+      }, {
+        "item" : "0.9879032258064516",
+        "count" : "189"
+      }, {
+        "item" : "0.9642857142857143",
+        "count" : "188"
+      }, {
+        "item" : "0.9973118279569892",
+        "count" : "170"
+      }, {
+        "item" : "0.9833333333333333",
+        "count" : "169"
+      }, {
+        "item" : "0.9979838709677419",
+        "count" : "166"
+      }, {
+        "item" : "0.9875",
+        "count" : "159"
+      }, {
+        "item" : "0.9798387096774194",
+        "count" : "158"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "precisionStyle" : "percentage",
+      "percentScale" : "1",
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312916,
+    "name" : "AM Peak Hours Available",
+    "dataTypeName" : "number",
+    "description" : "The total time (in hours) during the AM Peak period (6 to 10 a.m.), per month, that an elevator or escalator was available.",
+    "fieldName" : "am_peak_hours_available",
+    "position" : 11,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847905,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "124.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "124.0",
+        "count" : "18680"
+      }, {
+        "item" : "120.0",
+        "count" : "12932"
+      }, {
+        "item" : "0.0",
+        "count" : "2974"
+      }, {
+        "item" : "111.99999999999999",
+        "count" : "2271"
+      }, {
+        "item" : "116.0",
+        "count" : "1595"
+      }, {
+        "item" : "112.0",
+        "count" : "496"
+      }, {
+        "item" : "116.00000000000001",
+        "count" : "496"
+      }, {
+        "item" : "108.0",
+        "count" : "284"
+      }, {
+        "item" : "122.00000000000001",
+        "count" : "242"
+      }, {
+        "item" : "107.99999999999997",
+        "count" : "208"
+      }, {
+        "item" : "123.50000000000001",
+        "count" : "207"
+      }, {
+        "item" : "123.0",
+        "count" : "207"
+      }, {
+        "item" : "119.5",
+        "count" : "191"
+      }, {
+        "item" : "122.5",
+        "count" : "189"
+      }, {
+        "item" : "123.66666666666666",
+        "count" : "170"
+      }, {
+        "item" : "123.75",
+        "count" : "166"
+      }, {
+        "item" : "118.0",
+        "count" : "164"
+      }, {
+        "item" : "104.0",
+        "count" : "161"
+      }, {
+        "item" : "121.5",
+        "count" : "160"
+      }, {
+        "item" : "123.83333333333334",
+        "count" : "158"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312923,
+    "name" : "AM Peak Total Hours",
+    "dataTypeName" : "number",
+    "description" : "The number of hours during the AM Peak period (6 to 10 a.m.) for the entire month, excluding capital outages.",
+    "fieldName" : "am_peak_total_hours",
+    "position" : 12,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847912,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "124.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "124.0",
+        "count" : "45483"
+      }, {
+        "item" : "120.0",
+        "count" : "26034"
+      }, {
+        "item" : "111.99999999999999",
+        "count" : "5190"
+      }, {
+        "item" : "0.0",
+        "count" : "2557"
+      }, {
+        "item" : "116.0",
+        "count" : "1775"
+      }, {
+        "item" : "107.99999999999997",
+        "count" : "64"
+      }, {
+        "item" : "4.0",
+        "count" : "47"
+      }, {
+        "item" : "99.99999999999997",
+        "count" : "47"
+      }, {
+        "item" : "103.99999999999997",
+        "count" : "44"
+      }, {
+        "item" : "79.99999999999997",
+        "count" : "43"
+      }, {
+        "item" : "91.99999999999996",
+        "count" : "36"
+      }, {
+        "item" : "32.0",
+        "count" : "34"
+      }, {
+        "item" : "83.99999999999997",
+        "count" : "32"
+      }, {
+        "item" : "52.0",
+        "count" : "32"
+      }, {
+        "item" : "63.999999999999986",
+        "count" : "29"
+      }, {
+        "item" : "71.99999999999997",
+        "count" : "28"
+      }, {
+        "item" : "12.0",
+        "count" : "27"
+      }, {
+        "item" : "87.99999999999997",
+        "count" : "26"
+      }, {
+        "item" : "95.99999999999996",
+        "count" : "26"
+      }, {
+        "item" : "44.0",
+        "count" : "24"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312915,
+    "name" : "PM Peak Availability",
+    "dataTypeName" : "number",
+    "description" : "The percent of the time that the elevator or escalator was available during the PM Peak period (3 to 7 p.m.), per month. ",
+    "fieldName" : "pm_peak_availability",
+    "position" : 13,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847904,
+    "cachedContents" : {
+      "non_null" : "79845",
+      "largest" : "1.0",
+      "null" : "2540",
+      "top" : [ {
+        "item" : "1.0",
+        "count" : "31616"
+      }, {
+        "item" : "0.967741935483871",
+        "count" : "1729"
+      }, {
+        "item" : "0.9666666666666667",
+        "count" : "1043"
+      }, {
+        "item" : "0.935483870967742",
+        "count" : "502"
+      }, {
+        "item" : "0.0",
+        "count" : "416"
+      }, {
+        "item" : "0.9333333333333333",
+        "count" : "329"
+      }, {
+        "item" : "0.9032258064516129",
+        "count" : "231"
+      }, {
+        "item" : "0.9642857142857143",
+        "count" : "217"
+      }, {
+        "item" : "0.9791666666666666",
+        "count" : "196"
+      }, {
+        "item" : "0.9758064516129032",
+        "count" : "189"
+      }, {
+        "item" : "0.9919354838709677",
+        "count" : "188"
+      }, {
+        "item" : "0.9875",
+        "count" : "184"
+      }, {
+        "item" : "0.9879032258064516",
+        "count" : "182"
+      }, {
+        "item" : "0.9838709677419355",
+        "count" : "181"
+      }, {
+        "item" : "0.9916666666666667",
+        "count" : "179"
+      }, {
+        "item" : "0.9833333333333333",
+        "count" : "158"
+      }, {
+        "item" : "0.9798387096774194",
+        "count" : "157"
+      }, {
+        "item" : "0.9959677419354839",
+        "count" : "152"
+      }, {
+        "item" : "0.9",
+        "count" : "150"
+      }, {
+        "item" : "0.8709677419354839",
+        "count" : "132"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "precisionStyle" : "percentage",
+      "percentScale" : "1",
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312918,
+    "name" : "PM Peak Hours Available",
+    "dataTypeName" : "number",
+    "description" : "The total time (in hours) during the PM Peak period (3 to 7 p.m.), per month, that an elevator or escalator was available.",
+    "fieldName" : "pm_peak_hours_available",
+    "position" : 14,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847907,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "124.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "124.0",
+        "count" : "17730"
+      }, {
+        "item" : "120.0",
+        "count" : "12263"
+      }, {
+        "item" : "0.0",
+        "count" : "2956"
+      }, {
+        "item" : "111.99999999999999",
+        "count" : "2166"
+      }, {
+        "item" : "116.0",
+        "count" : "1685"
+      }, {
+        "item" : "112.0",
+        "count" : "553"
+      }, {
+        "item" : "116.00000000000001",
+        "count" : "502"
+      }, {
+        "item" : "108.0",
+        "count" : "299"
+      }, {
+        "item" : "107.99999999999997",
+        "count" : "237"
+      }, {
+        "item" : "121.0",
+        "count" : "190"
+      }, {
+        "item" : "123.0",
+        "count" : "189"
+      }, {
+        "item" : "122.00000000000001",
+        "count" : "183"
+      }, {
+        "item" : "122.5",
+        "count" : "182"
+      }, {
+        "item" : "118.0",
+        "count" : "179"
+      }, {
+        "item" : "118.5",
+        "count" : "174"
+      }, {
+        "item" : "104.0",
+        "count" : "171"
+      }, {
+        "item" : "121.5",
+        "count" : "158"
+      }, {
+        "item" : "123.50000000000001",
+        "count" : "152"
+      }, {
+        "item" : "119.5",
+        "count" : "150"
+      }, {
+        "item" : "100.0",
+        "count" : "134"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312919,
+    "name" : "PM Peak Total Hours",
+    "dataTypeName" : "number",
+    "description" : "The number of hours during the PM Peak period (3 to 7 p.m.) for the entire month, excluding capital outages.",
+    "fieldName" : "pm_peak_total_hours",
+    "position" : 15,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847908,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "124.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "124.0",
+        "count" : "45556"
+      }, {
+        "item" : "120.0",
+        "count" : "26037"
+      }, {
+        "item" : "111.99999999999999",
+        "count" : "5215"
+      }, {
+        "item" : "0.0",
+        "count" : "2540"
+      }, {
+        "item" : "116.0",
+        "count" : "1798"
+      }, {
+        "item" : "107.99999999999997",
+        "count" : "60"
+      }, {
+        "item" : "103.99999999999997",
+        "count" : "56"
+      }, {
+        "item" : "4.0",
+        "count" : "42"
+      }, {
+        "item" : "79.99999999999997",
+        "count" : "40"
+      }, {
+        "item" : "91.99999999999996",
+        "count" : "34"
+      }, {
+        "item" : "99.99999999999997",
+        "count" : "34"
+      }, {
+        "item" : "8.0",
+        "count" : "32"
+      }, {
+        "item" : "63.999999999999986",
+        "count" : "31"
+      }, {
+        "item" : "71.99999999999997",
+        "count" : "30"
+      }, {
+        "item" : "16.0",
+        "count" : "30"
+      }, {
+        "item" : "83.99999999999997",
+        "count" : "28"
+      }, {
+        "item" : "95.99999999999996",
+        "count" : "27"
+      }, {
+        "item" : "48.0",
+        "count" : "27"
+      }, {
+        "item" : "23.999999999999996",
+        "count" : "26"
+      }, {
+        "item" : "44.0",
+        "count" : "25"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312912,
+    "name" : "24-Hour Availability",
+    "dataTypeName" : "number",
+    "description" : "The percent of the time that the elevator or escalator was available, per month.",
+    "fieldName" : "_24_hour_availability",
+    "position" : 16,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847901,
+    "cachedContents" : {
+      "non_null" : "79857",
+      "largest" : "1.0",
+      "null" : "2528",
+      "top" : [ {
+        "item" : "1.0",
+        "count" : "7693"
+      }, {
+        "item" : "0.0",
+        "count" : "386"
+      }, {
+        "item" : "0.9930555555555556",
+        "count" : "262"
+      }, {
+        "item" : "0.9932795698924731",
+        "count" : "188"
+      }, {
+        "item" : "0.993391577060932",
+        "count" : "142"
+      }, {
+        "item" : "0.9936155913978495",
+        "count" : "125"
+      }, {
+        "item" : "0.9935035842293907",
+        "count" : "122"
+      }, {
+        "item" : "0.9939516129032258",
+        "count" : "120"
+      }, {
+        "item" : "0.9929435483870968",
+        "count" : "114"
+      }, {
+        "item" : "0.9937275985663082",
+        "count" : "106"
+      }, {
+        "item" : "0.9926075268817204",
+        "count" : "98"
+      }, {
+        "item" : "0.9931675627240143",
+        "count" : "93"
+      }, {
+        "item" : "0.99375",
+        "count" : "88"
+      }, {
+        "item" : "0.993839605734767",
+        "count" : "87"
+      }, {
+        "item" : "0.9931712962962963",
+        "count" : "85"
+      }, {
+        "item" : "0.9934027777777777",
+        "count" : "83"
+      }, {
+        "item" : "0.992831541218638",
+        "count" : "82"
+      }, {
+        "item" : "0.9929398148148149",
+        "count" : "80"
+      }, {
+        "item" : "0.9923611111111111",
+        "count" : "79"
+      }, {
+        "item" : "0.9927195340501792",
+        "count" : "77"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "precisionStyle" : "percentage",
+      "percentScale" : "1",
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312921,
+    "name" : "24-Hour Hours Available",
+    "dataTypeName" : "number",
+    "description" : "The total time (in hours) during the month that an elevator or escalator was available.",
+    "fieldName" : "_24_hour_hours_available",
+    "position" : 17,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847910,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "744.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "744.0",
+        "count" : "4245"
+      }, {
+        "item" : "0.0",
+        "count" : "2914"
+      }, {
+        "item" : "720.0",
+        "count" : "2552"
+      }, {
+        "item" : "672.0",
+        "count" : "492"
+      }, {
+        "item" : "739.0",
+        "count" : "188"
+      }, {
+        "item" : "696.0",
+        "count" : "161"
+      }, {
+        "item" : "738.8333333333333",
+        "count" : "143"
+      }, {
+        "item" : "739.0833333333334",
+        "count" : "142"
+      }, {
+        "item" : "739.25",
+        "count" : "125"
+      }, {
+        "item" : "739.1666666666666",
+        "count" : "122"
+      }, {
+        "item" : "739.5",
+        "count" : "121"
+      }, {
+        "item" : "738.75",
+        "count" : "114"
+      }, {
+        "item" : "715.0",
+        "count" : "112"
+      }, {
+        "item" : "739.3333333333334",
+        "count" : "106"
+      }, {
+        "item" : "738.5",
+        "count" : "98"
+      }, {
+        "item" : "715.0833333333334",
+        "count" : "96"
+      }, {
+        "item" : "738.9166666666666",
+        "count" : "93"
+      }, {
+        "item" : "715.25",
+        "count" : "91"
+      }, {
+        "item" : "715.5",
+        "count" : "88"
+      }, {
+        "item" : "739.4166666666667",
+        "count" : "87"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312914,
+    "name" : "24-Hour Total Hours",
+    "dataTypeName" : "number",
+    "description" : "The number of hours during the month, excluding capital outages",
+    "fieldName" : "_24_hour_total_hours",
+    "position" : 18,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847903,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "744.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "744.0",
+        "count" : "45027"
+      }, {
+        "item" : "720.0",
+        "count" : "25690"
+      }, {
+        "item" : "672.0",
+        "count" : "5054"
+      }, {
+        "item" : "0.0",
+        "count" : "2528"
+      }, {
+        "item" : "696.0",
+        "count" : "1617"
+      }, {
+        "item" : "24.0",
+        "count" : "16"
+      }, {
+        "item" : "480.0",
+        "count" : "12"
+      }, {
+        "item" : "741.4166666666666",
+        "count" : "11"
+      }, {
+        "item" : "48.0",
+        "count" : "9"
+      }, {
+        "item" : "432.0",
+        "count" : "9"
+      }, {
+        "item" : "552.0",
+        "count" : "9"
+      }, {
+        "item" : "737.7",
+        "count" : "8"
+      }, {
+        "item" : "384.0",
+        "count" : "8"
+      }, {
+        "item" : "504.0",
+        "count" : "8"
+      }, {
+        "item" : "312.0",
+        "count" : "8"
+      }, {
+        "item" : "600.0",
+        "count" : "8"
+      }, {
+        "item" : "83.91666666666666",
+        "count" : "7"
+      }, {
+        "item" : "178.0",
+        "count" : "7"
+      }, {
+        "item" : "648.0",
+        "count" : "6"
+      }, {
+        "item" : "192.0",
+        "count" : "6"
+      } ],
+      "smallest" : "0.0",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 579312909,
+    "name" : "Station Name",
+    "dataTypeName" : "text",
+    "description" : "The name of the subway station.",
+    "fieldName" : "station_name",
+    "position" : 19,
+    "renderTypeName" : "text",
+    "tableColumnId" : 145878310,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "WORLDTRADECENTER-8AV-E",
+      "null" : "0",
+      "top" : [ {
+        "item" : "LEXINGTONAV/63ST-63S-F/Q",
+        "count" : "2480"
+      }, {
+        "item" : "34ST-HUDSONYARDS-FLS-7",
+        "count" : "2375"
+      }, {
+        "item" : "34ST-HERALDSQ-6AV-B/D/F",
+        "count" : "1946"
+      }, {
+        "item" : "72ST-2AV-Q",
+        "count" : "1840"
+      }, {
+        "item" : "GRANDCENTRAL-42ST-LEX-4/5/6",
+        "count" : "1816"
+      }, {
+        "item" : "FULTONST-LEX-4/5",
+        "count" : "1807"
+      }, {
+        "item" : "86ST-2AV-Q",
+        "count" : "1725"
+      }, {
+        "item" : "JAMAICACENTER-PARSONS/ARCHER-QBL-E/J/Z",
+        "count" : "1668"
+      }, {
+        "item" : "ROOSEVELTISLAND-63S-F",
+        "count" : "1668"
+      }, {
+        "item" : "BOWLINGGREEN-LEX-4/5",
+        "count" : "1529"
+      }, {
+        "item" : "SUTPHINBLVD-ARCHERAV-JFKAIRPORT-QBL-E/J/Z",
+        "count" : "1390"
+      }, {
+        "item" : "HOWARDBEACH-JFKAIRPORT-RKY-A",
+        "count" : "1390"
+      }, {
+        "item" : "LEXINGTONAV/53ST-QBL-E/M",
+        "count" : "1390"
+      }, {
+        "item" : "96ST-2AV-Q",
+        "count" : "1265"
+      }, {
+        "item" : "SOUTHFERRY-7AV-1",
+        "count" : "1251"
+      }, {
+        "item" : "21ST-QUEENSBRIDGE-63S-F",
+        "count" : "1251"
+      }, {
+        "item" : "TIMESSQ-42ST-7AV-1/2/3",
+        "count" : "1251"
+      }, {
+        "item" : "FULTONST-8AV-A/C",
+        "count" : "1112"
+      }, {
+        "item" : "59ST-COLUMBUSCIRCLE-8AV-A/B/C/D",
+        "count" : "977"
+      }, {
+        "item" : "JAMAICAVANWYCK-QBL-E",
+        "count" : "973"
+      } ],
+      "smallest" : "125ST-8AV-A/B/C/D",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : { }
+  }, {
+    "id" : 579312917,
+    "name" : "Station MRN",
+    "dataTypeName" : "number",
+    "description" : "The Master Reference Number (MRN) for the subway station.",
+    "fieldName" : "station_mrn",
+    "position" : 20,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847906,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "477",
+      "null" : "0",
+      "top" : [ {
+        "item" : "223",
+        "count" : "2480"
+      }, {
+        "item" : "471",
+        "count" : "2375"
+      }, {
+        "item" : "227",
+        "count" : "1946"
+      }, {
+        "item" : "477",
+        "count" : "1840"
+      }, {
+        "item" : "402",
+        "count" : "1816"
+      }, {
+        "item" : "412",
+        "count" : "1807"
+      }, {
+        "item" : "476",
+        "count" : "1725"
+      }, {
+        "item" : "278",
+        "count" : "1668"
+      }, {
+        "item" : "222",
+        "count" : "1668"
+      }, {
+        "item" : "414",
+        "count" : "1529"
+      }, {
+        "item" : "275",
+        "count" : "1390"
+      }, {
+        "item" : "279",
+        "count" : "1390"
+      }, {
+        "item" : "198",
+        "count" : "1390"
+      }, {
+        "item" : "475",
+        "count" : "1265"
+      }, {
+        "item" : "221",
+        "count" : "1251"
+      }, {
+        "item" : "330",
+        "count" : "1251"
+      }, {
+        "item" : "317",
+        "count" : "1251"
+      }, {
+        "item" : "172",
+        "count" : "1112"
+      }, {
+        "item" : "161",
+        "count" : "977"
+      }, {
+        "item" : "163",
+        "count" : "973"
+      } ],
+      "smallest" : "2",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "center"
+    }
+  }, {
+    "id" : 579312910,
+    "name" : "Station Complex Name",
+    "dataTypeName" : "text",
+    "description" : "The name of the subway station complex.",
+    "fieldName" : "station_complex_name",
+    "position" : 21,
+    "renderTypeName" : "text",
+    "tableColumnId" : 145878309,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "Woodhaven Blvd - Station",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Fulton St (A,C,J,Z,2,3,4,5)",
+        "count" : "3336"
+      }, {
+        "item" : "Grand Central-42 St (S,4,5,6,7)",
+        "count" : "2993"
+      }, {
+        "item" : "Times Sq-42 St (N,Q,R,S,1,2,3,7)/42 St (A,C,E)",
+        "count" : "2692"
+      }, {
+        "item" : "34 St-Herald Sq (B,D,F,M,N,Q,R)",
+        "count" : "2502"
+      }, {
+        "item" : "Lexington Av/63 St - Station",
+        "count" : "2480"
+      }, {
+        "item" : "34 St-Hudson Yards - Station",
+        "count" : "2375"
+      }, {
+        "item" : "72 St - Station",
+        "count" : "2118"
+      }, {
+        "item" : "86 St - Station",
+        "count" : "1957"
+      }, {
+        "item" : "Lexington Av-53 St (E,M)/51 St (6)",
+        "count" : "1794"
+      }, {
+        "item" : "Jamaica Center-Parsons/Archer - Station",
+        "count" : "1668"
+      }, {
+        "item" : "South Ferry (1)/Whitehall St (R)",
+        "count" : "1668"
+      }, {
+        "item" : "Roosevelt Island - Station",
+        "count" : "1668"
+      }, {
+        "item" : "96 St - Station",
+        "count" : "1543"
+      }, {
+        "item" : "Bowling Green - Station",
+        "count" : "1529"
+      }, {
+        "item" : "Atlantic Av (B,Q,2,3,4,5)/Pacific St (D,N,R)",
+        "count" : "1529"
+      }, {
+        "item" : "181 St - Station",
+        "count" : "1454"
+      }, {
+        "item" : "Howard Beach-JFK Airport - Station",
+        "count" : "1390"
+      }, {
+        "item" : "Sutphin Blvd-Archer Av-JFK Airport - Station",
+        "count" : "1390"
+      }, {
+        "item" : "Jay St-MetroTech (A,C,F,R)",
+        "count" : "1360"
+      }, {
+        "item" : "Chambers St (A,C)/WTC (E)/Park Place (2,3)/Cortlandt St (R, W)",
+        "count" : "1310"
+      } ],
+      "smallest" : "125 St - Station",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : { }
+  }, {
+    "id" : 579312922,
+    "name" : "Station Complex MRN",
+    "dataTypeName" : "number",
+    "description" : "The Master Reference Number (MRN) for the subway station complex.",
+    "fieldName" : "station_complex_mrn",
+    "position" : 22,
+    "renderTypeName" : "number",
+    "tableColumnId" : 147847911,
+    "cachedContents" : {
+      "non_null" : "82385",
+      "largest" : "636",
+      "null" : "0",
+      "top" : [ {
+        "item" : "628",
+        "count" : "3336"
+      }, {
+        "item" : "610",
+        "count" : "2993"
+      }, {
+        "item" : "611",
+        "count" : "2692"
+      }, {
+        "item" : "607",
+        "count" : "2502"
+      }, {
+        "item" : "223",
+        "count" : "2480"
+      }, {
+        "item" : "471",
+        "count" : "2375"
+      }, {
+        "item" : "477",
+        "count" : "1840"
+      }, {
+        "item" : "612",
+        "count" : "1794"
+      }, {
+        "item" : "476",
+        "count" : "1725"
+      }, {
+        "item" : "278",
+        "count" : "1668"
+      }, {
+        "item" : "635",
+        "count" : "1668"
+      }, {
+        "item" : "222",
+        "count" : "1668"
+      }, {
+        "item" : "414",
+        "count" : "1529"
+      }, {
+        "item" : "617",
+        "count" : "1529"
+      }, {
+        "item" : "279",
+        "count" : "1390"
+      }, {
+        "item" : "198",
+        "count" : "1390"
+      }, {
+        "item" : "636",
+        "count" : "1360"
+      }, {
+        "item" : "624",
+        "count" : "1310"
+      }, {
+        "item" : "475",
+        "count" : "1265"
+      }, {
+        "item" : "221",
+        "count" : "1251"
+      } ],
+      "smallest" : "2",
+      "count" : "82385",
+      "cardinality" : "82385"
+    },
+    "format" : {
+      "align" : "center"
+    }
+  } ],
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "jsonQuery" : {
+      "order" : [ {
+        "columnFieldName" : "boroughname",
+        "ascending" : true
+      }, {
+        "columnFieldName" : "stationname",
+        "ascending" : true
+      }, {
+        "columnFieldName" : "stationcompletename",
+        "ascending" : true
+      }, {
+        "columnFieldName" : "equipmenttype",
+        "ascending" : true
+      }, {
+        "columnFieldName" : "equipmentcode",
+        "ascending" : true
+      }, {
+        "columnFieldName" : "year",
+        "ascending" : false
+      }, {
+        "columnFieldName" : "month",
+        "ascending" : true
+      } ]
+    },
+    "attachments" : [ {
+      "filename" : "MTA_SubwayElevatorAndEscalatorAvailability_Overview.pdf",
+      "assetId" : "6390c660-801d-4e3e-b6b5-948760a0f353",
+      "name" : "MTA_SubwayElevatorAndEscalatorAvailability_Overview.pdf"
+    }, {
+      "filename" : "MTA_SubwayElevatorAndEscalatorAvailability_DataDictionary.pdf",
+      "assetId" : "e608999b-83f5-40b8-97be-241df5da50d3",
+      "name" : "MTA_SubwayElevatorAndEscalatorAvailability_DataDictionary.pdf"
+    } ],
+    "custom_fields" : {
+      "Dataset Summary" : {
+        "Posting Frequency" : "Monthly",
+        "Organization" : "New York City Transit",
+        "Contact Information" : "OpenData@mtahq.org",
+        "Time Period" : "Beginning 2015",
+        "Coverage" : "New York City",
+        "Granularity" : "Month, borough, subway station, elevator/escalator asset",
+        "Dataset Owner" : "Metropolitan Transportation Authority"
+      },
+      "Additional Resources" : {
+        "See Also" : "https://metrics.mta.info"
+      },
+      "Dataset Information" : {
+        "Agency" : "Metropolitan Transportation Authority"
+      }
+    },
+    "availableDisplayTypes" : [ "table", "fatrow", "page" ]
+  },
+  "owner" : {
+    "id" : "xzik-pf59",
+    "displayName" : "NY Open Data",
+    "profileImageUrlLarge" : "/api/users/xzik-pf59/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/xzik-pf59/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/xzik-pf59/profile_images/TINY",
+    "screenName" : "NY Open Data",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : {
+    "orderBys" : [ {
+      "ascending" : true,
+      "expression" : {
+        "columnId" : 579312913,
+        "type" : "column"
+      }
+    } ]
+  },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "xzik-pf59",
+    "displayName" : "NY Open Data",
+    "profileImageUrlLarge" : "/api/users/xzik-pf59/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/xzik-pf59/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/xzik-pf59/profile_images/TINY",
+    "screenName" : "NY Open Data",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "new york city transit", "nyct", "subway", "monthly", "escalators", "elevators", "availability", "accessibility", "station", "subway station", "outages", "step-free access" ],
+  "flags" : [ "default", "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}
