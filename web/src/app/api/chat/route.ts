@@ -1,4 +1,3 @@
-import {anthropic} from '@ai-sdk/anthropic'
 import {createMCPClient} from '@ai-sdk/mcp'
 import {
   convertToModelMessages,
@@ -95,13 +94,19 @@ export async function POST(req: Request): Promise<Response> {
   const {messages}: {messages: UIMessage[]} = await req.json()
   const context = await contextTools()
   const result = streamText({
-    model: anthropic('claude-sonnet-5'),
+    // Plain model string routes through Vercel AI Gateway (OIDC auth on Vercel, no provider key).
+    // Override per deploy with STEPFREE_MODEL (any AI Gateway model id).
+    model: process.env.STEPFREE_MODEL ?? 'anthropic/claude-sonnet-5',
     instructions: INSTRUCTIONS,
     messages: await convertToModelMessages(messages),
     tools: {...context.tools, stepFreeRoute},
     stopWhen: isStepCount(8),
     onFinish: context.close,
-    onError: context.close,
+    onError: async ({error}) => {
+      // The client only sees a generic message; keep the cause in server logs.
+      console.error('chat stream failed:', error instanceof Error ? error.message : error)
+      await context.close()
+    },
   })
   return createUIMessageStreamResponse({stream: toUIMessageStream({stream: result.stream})})
 }

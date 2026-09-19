@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.58",
     "@ai-sdk/mcp": "^2.0.54",
     "@ai-sdk/react": "^4.0.110",
     "@sanity/client": "^8.6.2",
