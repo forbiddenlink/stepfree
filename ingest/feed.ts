@@ -1,4 +1,11 @@
 // Pure feed parsing and validation: no Sanity client, so the web app's tests can import it.
+
+/** "Fulton St (A,C,J,Z,2,3,4,5)" / "72 St - Station" -> the name riders use. Mirrors web cleanStationName. */
+export const cleanComplexName = (name: string): string =>
+  name
+    .replace(/\s*\([A-Z0-9]{1,2}(?:,[A-Z0-9]{1,2})*\)/g, '')
+    .replace(/\s*-\s*Station$/i, '')
+    .trim() || name
 export type OutageRow = {
   equipment: string
   outagedate: string

@@ -11,7 +11,7 @@ export const sanity = createClient({
 })
 
 const GRAPH_QUERY = `*[_type == "stationComplex"]{
-  complexId, name, adaStatus, borough,
+  complexId, name, adaStatus, borough, stopNames,
   "lines": lines[]->code,
   "edges": coalesce(adaNeighbors[defined(complex->complexId)]{
     direction, "to": complex->complexId, "lines": lines[]->code
@@ -36,8 +36,16 @@ const EQUIPMENT_QUERY = `*[_type == "equipment" && kind == "elevator" && isAda =
   alternativeRoute
 }`
 
-/** data.ny.gov names ~120 complexes "72 St - Station"; riders never say that, and it hides same-name stops from matching. */
-export const cleanStationName = (name: string): string => name.replace(/\s*-\s*Station$/i, '').trim() || name
+/**
+ * data.ny.gov names complexes "72 St - Station" or "Fulton St (A,C,J,Z,2,3,4,5)". Riders say neither, and the
+ * suffixes hide same-name stops from each other: "Fulton St" matched only the G stop with no elevator. The
+ * lines are shown separately, so drop line-list parentheses ("(110 St)" is kept) and the "- Station" suffix.
+ */
+export const cleanStationName = (name: string): string =>
+  name
+    .replace(/\s*\([A-Z0-9]{1,2}(?:,[A-Z0-9]{1,2})*\)/g, '')
+    .replace(/\s*-\s*Station$/i, '')
+    .trim() || name
 
 export async function loadNetwork(): Promise<{
   complexes: Complex[]
@@ -83,36 +91,39 @@ export function matchStation(complexes: Complex[], query: string): Complex[] {
       .trim()
   const q = norm(query)
   if (!q) return []
-  const exact = complexes.filter((c) => norm(c.name) === q)
+  // A complex is known by its own name and by the names of the stations inside it.
+  const namesOf = (c: Complex): string[] => [c.name, ...(c.stopNames ?? [])]
+  const exact = complexes.filter((c) => namesOf(c).some((n) => norm(n) === q))
   if (exact.length === 1) return exact
 
   const tokens = q.split(' ').filter(Boolean)
+  function scoreName(c: Complex, n: string): number {
+    const nameTokens = n.split(' ')
+    const lines = (c.lines ?? []).map((l) => l.toLowerCase())
+    const boro = (c.borough ?? '').toLowerCase()
+
+    if (n === q) return 100
+
+    const lineMatches = tokens.filter((t) => lines.includes(t)).length
+    const allTokensMatch = tokens.every(
+      (t) => nameTokens.includes(t) || lines.includes(t) || boro.includes(t),
+    )
+
+    let score = 0
+    if (allTokensMatch && nameTokens.some((t) => tokens.includes(t))) {
+      score = 80 + lineMatches * 15 + (c.adaStatus === 'full' ? 5 : 0)
+    } else if (n.startsWith(q)) {
+      score = 50 + (c.adaStatus === 'full' ? 5 : 0)
+    } else if (tokens.every((t) => nameTokens.includes(t))) {
+      score = 20 + (c.adaStatus === 'full' ? 5 : 0)
+    } else if (tokens.filter((t) => nameTokens.includes(t)).length >= 2) {
+      score = 10 + tokens.filter((t) => nameTokens.includes(t)).length
+    }
+    return score
+  }
+
   const scored = complexes
-    .map((c) => {
-      const n = norm(c.name)
-      const nameTokens = n.split(' ')
-      const lines = (c.lines ?? []).map((l) => l.toLowerCase())
-      const boro = (c.borough ?? '').toLowerCase()
-
-      if (n === q) return {c, score: 100}
-
-      const lineMatches = tokens.filter((t) => lines.includes(t)).length
-      const allTokensMatch = tokens.every(
-        (t) => nameTokens.includes(t) || lines.includes(t) || boro.includes(t),
-      )
-
-      let score = 0
-      if (allTokensMatch && nameTokens.some((t) => tokens.includes(t))) {
-        score = 80 + lineMatches * 15 + (c.adaStatus === 'full' ? 5 : 0)
-      } else if (n.startsWith(q)) {
-        score = 50 + (c.adaStatus === 'full' ? 5 : 0)
-      } else if (tokens.every((t) => nameTokens.includes(t))) {
-        score = 20 + (c.adaStatus === 'full' ? 5 : 0)
-      } else if (tokens.filter((t) => nameTokens.includes(t)).length >= 2) {
-        score = 10 + tokens.filter((t) => nameTokens.includes(t)).length
-      }
-      return {c, score}
-    })
+    .map((c) => ({c, score: Math.max(...namesOf(c).map((name) => scoreName(c, norm(name))))}))
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
 

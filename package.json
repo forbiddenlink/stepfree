@@ -8,6 +8,7 @@
     "ingest:outages": "tsx --env-file=.env.local ingest/outages.ts",
     "check:context": "tsx --env-file=.env.local ingest/context-check.ts",
     "notify": "tsx --env-file=.env.local ingest/notify.ts",
+    "backfill:names": "tsx --env-file=.env.local ingest/backfill-names.ts",
     "test": "pnpm --dir web test",
     "check": "tsc --noEmit && pnpm --dir web typecheck && pnpm --dir web lint && pnpm --dir studio exec tsc --noEmit && pnpm test"
   },

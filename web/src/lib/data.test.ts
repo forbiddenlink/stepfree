@@ -62,6 +62,13 @@ describe('resolveStation', () => {
     expect(resolveStation(all, '72 St', '999').kind).toBe('ambiguous')
   })
 
+  it('finds a complex by the name of a station inside it', () => {
+    const barclays = {complexId: '617', name: 'Atlantic Av/Pacific St', stopNames: ['Atlantic Av-Barclays Ctr'], edges: []}
+    const lStop = {complexId: '133', name: 'Atlantic Av', edges: []}
+    expect(resolveStation([barclays, lStop], 'Barclays Center')).toEqual({kind: 'match', complex: barclays})
+    expect(resolveStation([barclays, lStop], 'Atlantic Av-Barclays Ctr')).toEqual({kind: 'match', complex: barclays})
+  })
+
   it('reports no match', () => {
     expect(resolveStation(all, 'Atlantis')).toEqual({kind: 'none'})
   })
@@ -72,6 +79,11 @@ describe('cleanStationName', () => {
     expect(cleanStationName('72 St - Station')).toBe('72 St')
     expect(cleanStationName('Inwood-207 St - Station')).toBe('Inwood-207 St')
     expect(cleanStationName('34 St-Penn Station')).toBe('34 St-Penn Station')
+  })
+  it('drops line lists but keeps descriptive parentheses', () => {
+    expect(cleanStationName('Fulton St (A,C,J,Z,2,3,4,5)')).toBe('Fulton St')
+    expect(cleanStationName('Times Sq-42 St (N,Q,R,S,1,2,3,7)/42 St (A,C,E)')).toBe('Times Sq-42 St/42 St')
+    expect(cleanStationName('Cathedral Pkwy (110 St)')).toBe('Cathedral Pkwy (110 St)')
   })
 })
 

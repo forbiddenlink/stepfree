@@ -1,4 +1,5 @@
 // One-time (re-runnable) load: lines, station complexes, equipment + reliability history.
+import {cleanComplexName} from './feed'
 import {FEEDS, NON_SUBWAY, commitInChunks, complexId, equipmentId, getJson, lineId, ref, sanity} from './lib'
 
 type EquipmentRow = {
@@ -129,8 +130,8 @@ async function main(): Promise<void> {
     return {
       _id: complexId(mrn),
       _type: 'stationComplex',
-      // Strip data.ny.gov's generic "- Station" suffix; riders say "72 St", not "72 St - Station".
-      name: (complexNameByMrn.get(mrn) ?? names.join(' / ')).replace(/\s*-\s*Station$/i, ''),
+      name: cleanComplexName(complexNameByMrn.get(mrn) ?? names.join(' / ')),
+      stopNames: names.sort(),
       complexId: mrn,
       borough: BOROUGH[rows[0].borough] ?? rows[0].borough,
       location: {_type: 'geopoint', lat: Number(rows[0].gtfs_latitude), lng: Number(rows[0].gtfs_longitude)},

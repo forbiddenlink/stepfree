@@ -34,6 +34,12 @@ export const stationComplex = defineType({
       of: [{type: 'adaNeighbor'}],
       description: 'Step-free graph edges to the next accessible complex per line and direction.',
     }),
+    defineField({
+      name: 'stopNames',
+      type: 'array',
+      of: [{type: 'string'}],
+      description: 'Names of the stations inside this complex, as riders know them (e.g. "Atlantic Av-Barclays Ctr").',
+    }),
     defineField({name: 'busConnections', type: 'array', of: [{type: 'string'}]}),
     defineField({name: 'gtfsStopIds', type: 'array', of: [{type: 'string'}]}),
   ],
