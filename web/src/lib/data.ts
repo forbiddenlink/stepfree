@@ -115,3 +115,22 @@ export function matchStation(complexes: Complex[], query: string): Complex[] {
     .filter((x) => (maxScore >= 80 ? x.score >= maxScore - 10 : x.score > 0))
     .map((x) => x.c)
 }
+
+export type StationResolution =
+  | {kind: 'match'; complex: Complex}
+  | {kind: 'ambiguous'; candidates: Complex[]}
+  | {kind: 'none'}
+
+/**
+ * Resolve a rider's station reference without guessing. A known complexId (from an earlier
+ * clarification) wins; a single name match is used; anything else goes back to the rider.
+ * Never pick the "best" of several matches: an accessible look-alike is a different trip.
+ */
+export function resolveStation(complexes: Complex[], query: string, complexId?: string): StationResolution {
+  const byId = complexId ? complexes.find((c) => c.complexId === complexId) : undefined
+  if (byId) return {kind: 'match', complex: byId}
+  const matches = matchStation(complexes, query)
+  if (matches.length === 0) return {kind: 'none'}
+  if (matches.length === 1) return {kind: 'match', complex: matches[0]}
+  return {kind: 'ambiguous', candidates: matches.slice(0, 6)}
+}

@@ -11,7 +11,7 @@ import {
 } from 'ai'
 import {z} from 'zod'
 import {buildEquipmentOnRoute, findStepFreeRoute, type Complex} from '@/lib/graph'
-import {loadNetwork, matchStation} from '@/lib/data'
+import {loadNetwork, resolveStation} from '@/lib/data'
 
 export const maxDuration = 60
 
@@ -33,7 +33,7 @@ Tools:
 
 Rules:
 - Only an elevator with isAda true makes a path step-free. Escalators never do.
-- If stepFreeRoute returns ambiguous: true, ask the rider to clarify which station they mean, clearly listing the candidate options with their subway lines and borough.
+- If a tool returns ambiguous: true, ask the rider which station they mean, listing the candidates with their subway lines and borough. Never pick one yourself. Once the rider chooses, call the tool again with that candidate's complexId (fromId/toId/complexId) and keep using that id in follow-up questions.
 - When describing a route, mention the specific elevators the rider will use (street to platform, platform to mezzanine) and their operational status.
 - If an elevator on the route is out, say so first and quote the MTA-written detour (alternativeRoute) verbatim.
 - Do not invent confidence scores or claim reliability was checked unless you actually retrieved the equipment's availability records. Absence of a reported outage does not prove an elevator is working.
@@ -67,19 +67,42 @@ async function contextTools(): Promise<{tools: ToolSet; close: () => Promise<voi
   }
 }
 
+const formatCandidate = (c: Complex) => ({
+  name: c.name,
+  complexId: c.complexId,
+  borough: c.borough,
+  lines: c.lines ?? [],
+  adaStatus: c.adaStatus,
+  label: `${c.name} (${(c.lines ?? []).join('/')}${c.borough ? ` in ${c.borough}` : ''})`,
+})
+
 const checkStationElevators = tool({
   description:
     'Check the live elevator operating status, outages, physical equipment codes, and 12-month reliability for a specific subway station. Use when a rider asks about elevator status at one station (e.g. "Is the elevator at 161 St–Yankee Stadium working?").',
   inputSchema: z.object({
     station: z.string().trim().min(1).max(200).describe('Subway station name, e.g. "161 St-Yankee Stadium" or "Grand Central"'),
+    complexId: z.string().trim().max(20).optional().describe('complexId of a station the rider already chose from candidates'),
   }),
-  execute: async ({station}) => {
+  execute: async ({station, complexId}) => {
     const {complexes, outages, equipment, fetchedAt, sourceUpdatedAt} = await loadNetwork()
-    const matches = matchStation(complexes, station)
-    if (!matches.length) {
+    const resolved = resolveStation(complexes, station, complexId)
+    if (resolved.kind === 'none') {
       return {ok: false, reason: `No station matched "${station}".`, fetchedAt, sourceUpdatedAt}
     }
-    const target = matches[0]
+    if (resolved.kind === 'ambiguous') {
+      const candidates = resolved.candidates.map(formatCandidate)
+      return {
+        ok: false,
+        ambiguous: true,
+        field: 'station',
+        query: station,
+        candidates,
+        reason: `Several stations match "${station}": ${candidates.map((c) => c.label).join('; ')}. Which one?`,
+        fetchedAt,
+        sourceUpdatedAt,
+      }
+    }
+    const target = resolved.complex
     const stationEquipment = buildEquipmentOnRoute(
       [target.complexId],
       target.complexId,
@@ -111,71 +134,47 @@ const stepFreeRoute = tool({
   inputSchema: z.object({
     from: z.string().trim().min(1).max(200).describe('Origin station name'),
     to: z.string().trim().min(1).max(200).describe('Destination station name'),
+    fromId: z.string().trim().max(20).optional().describe('complexId of the origin the rider chose from candidates'),
+    toId: z.string().trim().max(20).optional().describe('complexId of the destination the rider chose from candidates'),
     departAt: z.iso.datetime({offset: true}).optional().describe('ISO time the rider will travel; defaults to now'),
   }),
-  execute: async ({from, to, departAt}) => {
+  execute: async ({from, to, fromId, toId, departAt}) => {
     const {complexes, outages, equipment, fetchedAt, sourceUpdatedAt} = await loadNetwork()
-    const a = matchStation(complexes, from)
-    const b = matchStation(complexes, to)
-    if (!a.length || !b.length) {
-      return {ok: false, reason: `No station matched "${!a.length ? from : to}".`, fetchedAt, sourceUpdatedAt}
-    }
-
-    const formatCandidate = (c: Complex) => ({
-      name: c.name,
-      complexId: c.complexId,
-      borough: c.borough,
-      lines: c.lines ?? [],
-      adaStatus: c.adaStatus,
-      label: `${c.name} (${(c.lines ?? []).join('/')}${c.borough ? ` in ${c.borough}` : ''})`,
-    })
-
-    const isAmbiguous = (matches: Complex[]): boolean => {
-      if (matches.length <= 1) return false
-      const topName = matches[0].name.toLowerCase()
-      const identical = matches.filter((c) => c.name.toLowerCase() === topName)
-      return identical.length > 1
-    }
-
-    if (isAmbiguous(a)) {
-      const candidates = a.filter((c) => c.name.toLowerCase() === a[0].name.toLowerCase()).map(formatCandidate)
-      return {
-        ok: false,
-        ambiguous: true,
-        field: 'from',
-        query: from,
-        candidates,
-        reason: `Multiple stations match "${from}": ${candidates.map((c) => c.label).join('; ')}. Please specify which line or station you mean.`,
-        fetchedAt,
-        sourceUpdatedAt,
+    const ends = [
+      {field: 'from', query: from, r: resolveStation(complexes, from, fromId)},
+      {field: 'to', query: to, r: resolveStation(complexes, to, toId)},
+    ] as const
+    for (const {field, query, r} of ends) {
+      if (r.kind === 'none') return {ok: false, reason: `No station matched "${query}".`, fetchedAt, sourceUpdatedAt}
+      if (r.kind === 'ambiguous') {
+        const candidates = r.candidates.map(formatCandidate)
+        return {
+          ok: false,
+          ambiguous: true,
+          field,
+          query,
+          candidates,
+          reason: `Several stations match "${query}": ${candidates.map((c) => c.label).join('; ')}. Which one did you mean?`,
+          fetchedAt,
+          sourceUpdatedAt,
+        }
       }
     }
-
-    if (isAmbiguous(b)) {
-      const candidates = b.filter((c) => c.name.toLowerCase() === b[0].name.toLowerCase()).map(formatCandidate)
-      return {
-        ok: false,
-        ambiguous: true,
-        field: 'to',
-        query: to,
-        candidates,
-        reason: `Multiple stations match "${to}": ${candidates.map((c) => c.label).join('; ')}. Which one did you mean?`,
-        fetchedAt,
-        sourceUpdatedAt,
-      }
-    }
+    const [ra, rb] = [ends[0].r, ends[1].r]
+    if (ra.kind !== 'match' || rb.kind !== 'match') throw new Error('unreachable: unresolved station')
+    const a = ra.complex
+    const b = rb.complex
 
     const at = departAt ? new Date(departAt) : new Date()
-    const result = findStepFreeRoute(complexes, outages, a[0].complexId, b[0].complexId, at, equipment)
+    const result = findStepFreeRoute(complexes, outages, a.complexId, b.complexId, at, equipment)
     return {
       ...result,
-      from: a[0].name,
-      to: b[0].name,
-      fromId: a[0].complexId,
-      toId: b[0].complexId,
-      fromLines: a[0].lines,
-      toLines: b[0].lines,
-      otherMatches: {from: a.slice(1, 4).map((c) => c.name), to: b.slice(1, 4).map((c) => c.name)},
+      from: a.name,
+      to: b.name,
+      fromId: a.complexId,
+      toId: b.complexId,
+      fromLines: a.lines,
+      toLines: b.lines,
       travelTime: at.toISOString(),
       fetchedAt,
       sourceUpdatedAt,

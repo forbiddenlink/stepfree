@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from 'vitest'
-import {loadNetwork, matchStation} from './data'
+import {loadNetwork, matchStation, resolveStation} from './data'
 
 const {fetchNetwork} = vi.hoisted(() => ({fetchNetwork: vi.fn()}))
 vi.mock('@sanity/client', () => ({createClient: () => ({fetch: fetchNetwork})}))
@@ -29,6 +29,41 @@ describe('matchStation', () => {
   it('normalizes common transit contractions like Center -> Ctr', () => {
     const barclays = {complexId: '617', name: 'Atlantic Av-Barclays Ctr', edges: []}
     expect(matchStation([barclays], 'Barclays Center')).toEqual([barclays])
+  })
+})
+
+describe('resolveStation', () => {
+  const q = {complexId: '1', name: '72 St', lines: ['Q'], borough: 'M', edges: []}
+  const bway = {complexId: '2', name: '72 St', lines: ['1', '2', '3'], borough: 'M', edges: []}
+  const cpw = {complexId: '3', name: '72 St', lines: ['B', 'C'], borough: 'M', edges: []}
+  const penn = {complexId: '4', name: '34 St-Penn Station', lines: ['A', 'C', 'E'], edges: []}
+  const herald = {complexId: '5', name: '34 St-Herald Sq', lines: ['B', 'D', 'F', 'M'], edges: []}
+  const all = [q, bway, cpw, penn, herald]
+
+  it('asks instead of choosing when several stations share a name', () => {
+    expect(resolveStation(all, '72 St')).toEqual({kind: 'ambiguous', candidates: [q, bway, cpw]})
+  })
+
+  it('asks instead of choosing between different loose matches', () => {
+    const r = resolveStation(all, '34 st')
+    expect(r.kind).toBe('ambiguous')
+    expect(r.kind === 'ambiguous' && r.candidates.map((c) => c.complexId).sort()).toEqual(['4', '5'])
+  })
+
+  it('uses a single match directly', () => {
+    expect(resolveStation(all, '72 St Q')).toEqual({kind: 'match', complex: q})
+  })
+
+  it('uses a chosen complexId so a clarification persists through follow-ups', () => {
+    expect(resolveStation(all, '72 St', '2')).toEqual({kind: 'match', complex: bway})
+  })
+
+  it('ignores an unknown complexId rather than trusting it', () => {
+    expect(resolveStation(all, '72 St', '999').kind).toBe('ambiguous')
+  })
+
+  it('reports no match', () => {
+    expect(resolveStation(all, 'Atlantis')).toEqual({kind: 'none'})
   })
 })
 

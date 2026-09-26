@@ -1,15 +1,9 @@
 import type { Leg, StationEquipment } from "@/lib/graph";
 import { LineBullet } from "./LineBullet";
+import { StationChoice, type StationCandidate } from "./StationChoice";
 import { WatchForm } from "./WatchForm";
 
-export type RouteCandidate = {
-  name: string;
-  complexId: string;
-  borough?: string;
-  lines: string[];
-  adaStatus?: string;
-  label: string;
-};
+export type RouteCandidate = StationCandidate;
 
 export type RouteOutput = {
   ok: boolean;
@@ -58,54 +52,15 @@ export function RouteCard({
   onSelectStation,
 }: {
   route: RouteOutput;
-  onSelectStation?: (stationText: string) => void;
+  onSelectStation?: (message: string) => void;
 }): React.JSX.Element {
   const warnings = route.warnings ?? [];
   const equipment = route.equipmentOnRoute ?? [];
 
-  // Case 1: Ambiguous station requiring clarification
+  // Case 1: more than one station matches; the rider chooses, never the agent
   if (route.ambiguous && route.candidates && route.candidates.length > 0) {
     return (
-      <section
-        aria-label={`Multiple stations match ${route.query ?? "your query"}`}
-        className="rounded-2xl border border-accent/40 bg-surface p-5 shadow-xs"
-      >
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-accent">
-            Station Ambiguity
-          </span>
-          <span className="text-xs text-muted">Please choose a station</span>
-        </div>
-        <h3 className="mt-2 text-lg font-bold">Which &ldquo;{route.query}&rdquo; station do you mean?</h3>
-        <p className="mt-1 text-sm text-muted">
-          Multiple stations share this name. Select the specific station to plan an accurate step-free trip:
-        </p>
-
-        <ul className="mt-4 grid gap-2 sm:grid-cols-1">
-          {route.candidates.map((candidate) => (
-            <li key={candidate.complexId}>
-              <button
-                type="button"
-                onClick={() => onSelectStation?.(candidate.name + (candidate.lines[0] ? ` ${candidate.lines[0]}` : ""))}
-                className="flex w-full items-center justify-between rounded-xl border border-line bg-background/50 px-4 py-3 text-left transition-colors hover:border-accent hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
-              >
-                <div>
-                  <p className="font-semibold text-foreground">{candidate.name}</p>
-                  <p className="text-xs text-muted">
-                    {candidate.borough ? `${candidate.borough} · ` : ""}
-                    {candidate.adaStatus === "full" ? "Fully accessible" : "Accessibility unconfirmed"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  {candidate.lines.map((l) => (
-                    <LineBullet key={l} line={l} />
-                  ))}
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <StationChoice query={route.query} field={route.field} candidates={route.candidates} onSelect={onSelectStation} />
     );
   }
 

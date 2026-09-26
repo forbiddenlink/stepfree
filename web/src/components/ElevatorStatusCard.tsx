@@ -1,5 +1,6 @@
 import type { EquipmentState } from "@/lib/graph";
 import { LineBullet } from "./LineBullet";
+import { StationChoice, type StationCandidate } from "./StationChoice";
 
 export type StationStatusOutput = {
   ok: boolean;
@@ -11,6 +12,9 @@ export type StationStatusOutput = {
   elevators?: EquipmentState[];
   hasOutages?: boolean;
   reason?: string;
+  ambiguous?: boolean;
+  query?: string;
+  candidates?: StationCandidate[];
   fetchedAt?: string;
   sourceUpdatedAt?: string;
 };
@@ -26,7 +30,16 @@ const nyTime = (iso?: string): string =>
       })
     : "unknown";
 
-export function ElevatorStatusCard({ status }: { status: StationStatusOutput }): React.JSX.Element {
+export function ElevatorStatusCard({
+  status,
+  onSelectStation,
+}: {
+  status: StationStatusOutput;
+  onSelectStation?: (message: string) => void;
+}): React.JSX.Element {
+  if (status.ambiguous && status.candidates && status.candidates.length > 0) {
+    return <StationChoice query={status.query} field="station" candidates={status.candidates} onSelect={onSelectStation} />;
+  }
   if (!status.ok) {
     return (
       <section className="rounded-2xl border border-bad/30 bg-bad/5 p-4 text-bad">

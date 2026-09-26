@@ -127,7 +127,7 @@ export default function Home(): React.JSX.Element {
                     <RouteCard
                       key={i}
                       route={p.output as RouteOutput}
-                      onSelectStation={(station) => send(`Departing from ${station}`)}
+                      onSelectStation={send}
                     />
                   );
                 }
@@ -136,6 +136,7 @@ export default function Home(): React.JSX.Element {
                     <ElevatorStatusCard
                       key={i}
                       status={p.output as StationStatusOutput}
+                      onSelectStation={send}
                     />
                   );
                 }
