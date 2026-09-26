@@ -43,19 +43,22 @@ Rules:
 - Distinguish sourceUpdatedAt (last MTA feed ingestion) from fetchedAt (this request's Sanity read). Report the source update time, in New York time.
 - Be brief, concrete, and empathetic. Riders are often on a phone, on the move.`
 
-async function contextTools(): Promise<{tools: ToolSet; close: () => Promise<void>}> {
+async function contextTools(): Promise<{tools: ToolSet; close: () => Promise<void>; unavailable: string[]}> {
   const token = process.env.SANITY_CONTEXT_TOKEN
   if (!token) throw new Error('SANITY_CONTEXT_TOKEN is not set')
   const clients = await Promise.all(
     Object.entries(ENDPOINTS).map(async ([prefix, url]) => {
+      let client: Awaited<ReturnType<typeof createMCPClient>> | undefined
       try {
-        const client = await createMCPClient({transport: {type: 'http', url, headers: {Authorization: `Bearer ${token}`}}})
+        client = await createMCPClient({transport: {type: 'http', url, headers: {Authorization: `Bearer ${token}`}}})
         const tools = await client.tools()
         // Both endpoints serve `initial_context`; prefix so neither shadows the other.
-        return {client, tools: Object.fromEntries(Object.entries(tools).map(([name, t]) => [`${prefix}_${name}`, t]))}
+        return {prefix, client, tools: Object.fromEntries(Object.entries(tools).map(([name, t]) => [`${prefix}_${name}`, t]))}
       } catch (err) {
         console.error(`Context endpoint "${prefix}" unavailable:`, err instanceof Error ? err.message : err)
-        return {client: undefined, tools: {}}
+        // A client that connected but failed discovery still holds a session: close it.
+        await client?.close().catch(() => {})
+        return {prefix, client: undefined, tools: {}}
       }
     }),
   )
@@ -64,6 +67,7 @@ async function contextTools(): Promise<{tools: ToolSet; close: () => Promise<voi
     close: async () => {
       await Promise.all(clients.map((c) => c.client?.close()))
     },
+    unavailable: clients.filter((c) => !c.client).map((c) => c.prefix),
   }
 }
 
@@ -202,10 +206,16 @@ export async function POST(req: Request): Promise<Response> {
     // Plain model string routes through Vercel AI Gateway (OIDC auth on Vercel, no provider key).
     // Override per deploy with STEPFREE_MODEL (any AI Gateway model id).
     model: process.env.STEPFREE_MODEL ?? 'anthropic/claude-sonnet-5',
-    instructions: INSTRUCTIONS,
+    // Say so when a source is down instead of letting the model answer without it.
+    instructions: context.unavailable.length
+      ? `${INSTRUCTIONS}\n\nUnavailable right now: ${context.unavailable.map((p) => (p === 'guide' ? 'the MTA policy knowledge base (guide_* tools)' : 'systemwide structured data (data_* tools)')).join(' and ')}. If a question needs it, tell the rider it is temporarily unavailable. Do not answer it from memory.`
+      : INSTRUCTIONS,
     messages,
     tools: {...context.tools, stepFreeRoute, checkStationElevators},
     stopWhen: isStepCount(8),
+    // A rider closing the tab stops the model run and releases both Context sessions.
+    abortSignal: req.signal,
+    onAbort: context.close,
     onFinish: context.close,
     onError: async ({error}) => {
       // The client only sees a generic message; keep the cause in server logs.

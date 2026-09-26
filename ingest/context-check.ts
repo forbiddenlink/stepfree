@@ -30,14 +30,9 @@ async function connect(name: string): Promise<Client> {
 async function checkData(): Promise<boolean> {
   const query =
     '*[_type=="equipment" && kind=="elevator" && isAda && defined(reliability.availability12mo)] | order(reliability.availability12mo asc)[0...3]{equipmentNo, "station": complex->name, "availability": reliability.availability12mo}'
-  let expectedCodes: string[] = []
-  try {
-    const independent = await sanity().fetch<Array<{equipmentNo: string}>>(query)
-    expectedCodes = independent.map((e) => e.equipmentNo)
-  } catch (err) {
-    console.warn('Could not run independent public query, falling back to known bottom units:', err)
-    expectedCodes = ['EL290X', 'EL131']
-  }
+  // No hard-coded fallback: if the independent answer is unavailable, the check cannot pass.
+  const independent = await sanity().fetch<Array<{equipmentNo: string}>>(query)
+  const expectedCodes = independent.map((e) => e.equipmentNo)
 
   const client = await connect('stepfree-data')
   const res = await client.callTool({

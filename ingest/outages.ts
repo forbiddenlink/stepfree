@@ -42,6 +42,19 @@ async function main(): Promise<void> {
   const open: string[] = await client.fetch('*[_type == "outage" && status in ["active", "upcoming"]]._id')
   const gone = open.filter((id) => !seen.has(id))
   for (const id of gone) tx.patch(id, (p) => p.set({status: 'resolved', resolvedAt: now}))
+  // Freshness comes from this run record, not from the newest outage, so it stays true even when
+  // no outage changed. Same transaction: the record can never claim a run that did not commit.
+  // No dot in the _id: dotted ids are private and anonymous public reads could not see it.
+  tx.createOrReplace({
+    _id: 'ingestrun-outages',
+    _type: 'ingestRun',
+    feed: 'outages',
+    finishedAt: now,
+    rows: feed.length,
+    upserted: seen.size,
+    resolved: gone.length,
+    unknownEquipment: skipped,
+  })
 
   await tx.commit({visibility: 'async'})
   console.log(`feed ${feed.length}, upserted ${seen.size}, resolved ${gone.length}, unknown equipment ${skipped}`)

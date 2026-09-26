@@ -51,7 +51,10 @@ export async function loadNetwork(): Promise<{
     sanity.fetch<Outage[]>(OUTAGE_QUERY),
     // No catch: without elevator data every route would look impossible, which is a failure, not an answer.
     sanity.fetch<EquipmentInfo[]>(EQUIPMENT_QUERY),
-    sanity.fetch<string | null>('*[_type == "outage" && defined(lastSeenAt)] | order(lastSeenAt desc)[0].lastSeenAt'),
+    // Last successful ingest run; falls back to the newest outage sighting for runs before the record existed.
+    sanity.fetch<string | null>(
+      'coalesce(*[_id == "ingestrun-outages"][0].finishedAt, *[_type == "outage" && defined(lastSeenAt)] | order(lastSeenAt desc)[0].lastSeenAt)',
+    ),
   ])
   const age = sourceUpdatedAt ? Date.now() - Date.parse(sourceUpdatedAt) : NaN
   if (!Number.isFinite(age) || age > 60 * 60_000 || age < -5 * 60_000) {
