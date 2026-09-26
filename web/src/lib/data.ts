@@ -36,6 +36,9 @@ const EQUIPMENT_QUERY = `*[_type == "equipment" && kind == "elevator" && isAda =
   alternativeRoute
 }`
 
+/** data.ny.gov names ~120 complexes "72 St - Station"; riders never say that, and it hides same-name stops from matching. */
+export const cleanStationName = (name: string): string => name.replace(/\s*-\s*Station$/i, '').trim() || name
+
 export async function loadNetwork(): Promise<{
   complexes: Complex[]
   outages: Outage[]
@@ -53,7 +56,7 @@ export async function loadNetwork(): Promise<{
   if (!Number.isFinite(age) || age > 60 * 60_000 || age < -5 * 60_000) {
     throw new Error('Current outage data is unavailable or more than an hour old. Check mta.info/elevators before planning a trip.')
   }
-  return {complexes, outages, equipment: equipment ?? [], fetchedAt: new Date().toISOString(), sourceUpdatedAt: sourceUpdatedAt!}
+  return {complexes: complexes.map((c) => ({...c, name: cleanStationName(c.name)})), outages, equipment: equipment ?? [], fetchedAt: new Date().toISOString(), sourceUpdatedAt: sourceUpdatedAt!}
 }
 
 /** Loose station-name match: "72 st", "72nd", "times sq", "72 st q" -> candidate complexes, best first. */

@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from 'vitest'
-import {loadNetwork, matchStation, resolveStation} from './data'
+import {cleanStationName, loadNetwork, matchStation, resolveStation} from './data'
 
 const {fetchNetwork} = vi.hoisted(() => ({fetchNetwork: vi.fn()}))
 vi.mock('@sanity/client', () => ({createClient: () => ({fetch: fetchNetwork})}))
@@ -67,6 +67,14 @@ describe('resolveStation', () => {
   })
 })
 
+describe('cleanStationName', () => {
+  it('drops the generic "- Station" suffix so same-name stops match together', () => {
+    expect(cleanStationName('72 St - Station')).toBe('72 St')
+    expect(cleanStationName('Inwood-207 St - Station')).toBe('Inwood-207 St')
+    expect(cleanStationName('34 St-Penn Station')).toBe('34 St-Penn Station')
+  })
+})
+
 describe('loadNetwork', () => {
   function snapshot(updatedAt: string | null): void {
     fetchNetwork
@@ -75,6 +83,16 @@ describe('loadNetwork', () => {
       .mockResolvedValueOnce([]) // equipment
       .mockResolvedValueOnce(updatedAt) // sourceUpdatedAt
   }
+
+  it('cleans station names so "72 St" finds every 72 St', async () => {
+    fetchNetwork
+      .mockResolvedValueOnce([{complexId: '313', name: '72 St - Station', edges: []}, {complexId: '160', name: '72 St', edges: []}])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(new Date().toISOString())
+    const {complexes} = await loadNetwork()
+    expect(resolveStation(complexes, '72 St').kind).toBe('ambiguous')
+  })
 
   it('reports the source refresh time separately from the request time', async () => {
     const updatedAt = new Date(Date.now() - 5 * 60_000).toISOString()

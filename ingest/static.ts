@@ -129,7 +129,8 @@ async function main(): Promise<void> {
     return {
       _id: complexId(mrn),
       _type: 'stationComplex',
-      name: complexNameByMrn.get(mrn) ?? names.join(' / '),
+      // Strip data.ny.gov's generic "- Station" suffix; riders say "72 St", not "72 St - Station".
+      name: (complexNameByMrn.get(mrn) ?? names.join(' / ')).replace(/\s*-\s*Station$/i, ''),
       complexId: mrn,
       borough: BOROUGH[rows[0].borough] ?? rows[0].borough,
       location: {_type: 'geopoint', lat: Number(rows[0].gtfs_latitude), lng: Number(rows[0].gtfs_longitude)},
