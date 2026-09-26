@@ -10,6 +10,8 @@ export type Complex = {
   complexId: string
   name: string
   adaStatus?: 'full' | 'partial' | 'none'
+  borough?: string
+  lines?: string[]
   edges: Edge[]
 }
 export type Outage = {
@@ -22,10 +24,56 @@ export type Outage = {
   isRedundant?: boolean
   alternativeRoute?: string
 }
+
+export type EquipmentInfo = {
+  equipmentNo: string
+  serving?: string
+  shortDescription?: string
+  isRedundant?: boolean
+  complexId: string
+  lines?: string[]
+  availability12mo?: number
+  alternativeRoute?: string
+}
+
+export type EquipmentState = {
+  equipmentNo: string
+  serving?: string
+  shortDescription?: string
+  isRedundant?: boolean
+  lines?: string[]
+  availability12mo?: number
+  isOut: boolean
+  outageReason?: string
+  estimatedReturnAt?: string
+  alternativeRoute?: string
+}
+
+export type StationEquipment = {
+  complexId: string
+  stationName: string
+  role: 'origin' | 'transfer' | 'destination'
+  elevators: EquipmentState[]
+  hasOutage: boolean
+}
+
 export type Leg = {line: string; from: string; to: string; accessibleHops: number} // hops between ACCESSIBLE stations, not every stop
 export type RouteResult =
-  | {ok: true; legs: Leg[]; transfers: string[]; warnings: string[]; complexesUsed: string[]; keyComplexes: string[]}
-  | {ok: false; reason: string; warnings: string[]}
+  | {
+      ok: true
+      legs: Leg[]
+      transfers: string[]
+      warnings: string[]
+      complexesUsed: string[]
+      keyComplexes: string[]
+      equipmentOnRoute?: StationEquipment[]
+    }
+  | {
+      ok: false
+      reason: string
+      warnings: string[]
+      equipmentOnRoute?: StationEquipment[]
+    }
 
 export const TRANSFER_COST = 3
 
@@ -35,7 +83,8 @@ export function isOutAt(o: Outage, at: Date): boolean {
   const start = o.startsAt ? Date.parse(o.startsAt) : -Infinity
   const end = o.estimatedReturnAt ? Date.parse(o.estimatedReturnAt) : Infinity
   const t = at.getTime()
-  if (o.status === 'active') return t < end
+  // An estimated return is not evidence of repair; only ingestion can resolve an outage.
+  if (o.status === 'active') return true
   return t >= start && t < end
 }
 
@@ -47,6 +96,63 @@ export function degradedComplexes(outages: Outage[], at: Date): Map<string, Outa
     out.set(o.complexId, [...(out.get(o.complexId) ?? []), o])
   }
   return out
+}
+
+export function buildEquipmentOnRoute(
+  keyComplexes: string[],
+  fromId: string,
+  toId: string,
+  byId: Map<string, Complex>,
+  equipment: EquipmentInfo[] | undefined,
+  outages: Outage[],
+  at: Date,
+): StationEquipment[] {
+  if (!equipment || equipment.length === 0) return []
+  const eqByComplex = new Map<string, EquipmentInfo[]>()
+  for (const eq of equipment) {
+    const list = eqByComplex.get(eq.complexId) ?? []
+    list.push(eq)
+    eqByComplex.set(eq.complexId, list)
+  }
+  const outageByNo = new Map<string, Outage>()
+  for (const o of outages) {
+    if (isOutAt(o, at)) outageByNo.set(o.equipmentNo, o)
+  }
+
+  const result: StationEquipment[] = []
+  const seen = new Set<string>()
+
+  for (const cid of keyComplexes) {
+    if (seen.has(cid)) continue
+    seen.add(cid)
+    const c = byId.get(cid)
+    const eqList = eqByComplex.get(cid) ?? []
+    const role: 'origin' | 'transfer' | 'destination' =
+      cid === fromId ? 'origin' : cid === toId ? 'destination' : 'transfer'
+    const elevators: EquipmentState[] = eqList.map((eq) => {
+      const out = outageByNo.get(eq.equipmentNo)
+      return {
+        equipmentNo: eq.equipmentNo,
+        serving: eq.serving,
+        shortDescription: eq.shortDescription,
+        isRedundant: eq.isRedundant,
+        lines: eq.lines,
+        availability12mo: eq.availability12mo,
+        isOut: Boolean(out),
+        outageReason: out?.reason,
+        estimatedReturnAt: out?.estimatedReturnAt,
+        alternativeRoute: out?.alternativeRoute ?? eq.alternativeRoute,
+      }
+    })
+    result.push({
+      complexId: cid,
+      stationName: c?.name ?? cid,
+      role,
+      elevators,
+      hasOutage: elevators.some((e) => e.isOut),
+    })
+  }
+  return result
 }
 
 type State = {complex: string; line: string}
@@ -77,7 +183,9 @@ export function findStepFreeRoute(
   fromId: string,
   toId: string,
   at: Date,
+  equipment?: EquipmentInfo[],
 ): RouteResult {
+  if (!Number.isFinite(at.getTime())) return {ok: false, reason: 'Invalid departure time.', warnings: []}
   const byId = new Map(complexes.map((c) => [c.complexId, c]))
   const from = byId.get(fromId)
   const to = byId.get(toId)
@@ -88,7 +196,9 @@ export function findStepFreeRoute(
     if (c.adaStatus === 'none') {
       return {ok: false, reason: `${c.name} has no accessible entrance.`, warnings}
     }
-    if (c.adaStatus === 'partial') warnings.push(`${c.name} is only partially accessible; check which platforms have elevator access.`)
+    if (c.adaStatus !== 'full') {
+      return {ok: false, reason: `Step-free platform access at ${c.name} is not confirmed by this network. Check the MTA station details.`, warnings}
+    }
   }
   const degraded = degradedComplexes(outages, at)
   for (const c of [from, to]) {
@@ -100,7 +210,19 @@ export function findStepFreeRoute(
       )
     }
   }
-  if (fromId === toId) return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId], keyComplexes: [fromId]}
+  if (degraded.has(fromId) || degraded.has(toId)) {
+    const equipmentOnRoute = buildEquipmentOnRoute([fromId, toId], fromId, toId, byId, equipment, outages, at)
+    return {
+      ok: false,
+      reason: 'An elevator outage affects boarding or leaving this route. Step-free access cannot be confirmed.',
+      warnings,
+      equipmentOnRoute,
+    }
+  }
+  if (fromId === toId) {
+    const equipmentOnRoute = buildEquipmentOnRoute([fromId], fromId, toId, byId, equipment, outages, at)
+    return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId], keyComplexes: [fromId], equipmentOnRoute}
+  }
 
   const adj = adjacency(complexes)
   // Dijkstra over (complex, line). Small graph (~340 edges): a sorted array is plenty.
@@ -133,14 +255,16 @@ export function findStepFreeRoute(
     }
     for (const e of adj.get(s.complex) ?? []) {
       if (e.line === s.line) relax({complex: e.to, line: e.line}, 1)
-      else if (s.complex !== fromId && !degraded.has(s.complex)) relax({complex: s.complex, line: e.line}, TRANSFER_COST)
+      else if (s.complex !== fromId && byId.get(s.complex)?.adaStatus === 'full' && !degraded.has(s.complex)) relax({complex: s.complex, line: e.line}, TRANSFER_COST)
     }
   }
   if (!goal) {
+    const equipmentOnRoute = buildEquipmentOnRoute([fromId, toId], fromId, toId, byId, equipment, outages, at)
     return {
       ok: false,
       reason: 'No step-free route found in the MTA accessible-station graph with the elevators expected to be working.',
       warnings,
+      equipmentOnRoute,
     }
   }
 
@@ -167,5 +291,6 @@ export function findStepFreeRoute(
     }
   }
   keyComplexes.push(toId)
-  return {ok: true, legs, transfers, warnings, complexesUsed: [...new Set(path.map((p) => p.complex))], keyComplexes}
+  const equipmentOnRoute = buildEquipmentOnRoute(keyComplexes, fromId, toId, byId, equipment, outages, at)
+  return {ok: true, legs, transfers, warnings, complexesUsed: [...new Set(path.map((p) => p.complex))], keyComplexes, equipmentOnRoute}
 }

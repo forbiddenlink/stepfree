@@ -1,18 +1,35 @@
-import type { Leg } from "@/lib/graph";
+import type { Leg, StationEquipment } from "@/lib/graph";
 import { LineBullet } from "./LineBullet";
 import { WatchForm } from "./WatchForm";
 
+export type RouteCandidate = {
+  name: string;
+  complexId: string;
+  borough?: string;
+  lines: string[];
+  adaStatus?: string;
+  label: string;
+};
+
 export type RouteOutput = {
   ok: boolean;
+  ambiguous?: boolean;
+  field?: "from" | "to";
+  query?: string;
+  candidates?: RouteCandidate[];
   reason?: string;
   from?: string;
   to?: string;
   fromId?: string;
   toId?: string;
+  fromLines?: string[];
+  toLines?: string[];
   legs?: Leg[];
   transfers?: string[];
   warnings?: string[];
+  equipmentOnRoute?: StationEquipment[];
   fetchedAt?: string;
+  sourceUpdatedAt?: string;
   travelTime?: string;
 };
 
@@ -27,48 +44,218 @@ const nyTime = (iso?: string): string =>
       })
     : "unknown";
 
-export function RouteCard({ route }: { route: RouteOutput }): React.JSX.Element {
+const relativeTime = (iso?: string): string => {
+  if (!iso) return "";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.max(0, Math.round(diffMs / 60000));
+  if (mins === 0) return "just now";
+  if (mins === 1) return "1 min ago";
+  return `${mins}m ago`;
+};
+
+export function RouteCard({
+  route,
+  onSelectStation,
+}: {
+  route: RouteOutput;
+  onSelectStation?: (stationText: string) => void;
+}): React.JSX.Element {
   const warnings = route.warnings ?? [];
+  const equipment = route.equipmentOnRoute ?? [];
+
+  // Case 1: Ambiguous station requiring clarification
+  if (route.ambiguous && route.candidates && route.candidates.length > 0) {
+    return (
+      <section
+        aria-label={`Multiple stations match ${route.query ?? "your query"}`}
+        className="rounded-2xl border border-accent/40 bg-surface p-5 shadow-xs"
+      >
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-accent">
+            Station Ambiguity
+          </span>
+          <span className="text-xs text-muted">Please choose a station</span>
+        </div>
+        <h3 className="mt-2 text-lg font-bold">Which &ldquo;{route.query}&rdquo; station do you mean?</h3>
+        <p className="mt-1 text-sm text-muted">
+          Multiple stations share this name. Select the specific station to plan an accurate step-free trip:
+        </p>
+
+        <ul className="mt-4 grid gap-2 sm:grid-cols-1">
+          {route.candidates.map((candidate) => (
+            <li key={candidate.complexId}>
+              <button
+                type="button"
+                onClick={() => onSelectStation?.(candidate.name + (candidate.lines[0] ? ` ${candidate.lines[0]}` : ""))}
+                className="flex w-full items-center justify-between rounded-xl border border-line bg-background/50 px-4 py-3 text-left transition-colors hover:border-accent hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                <div>
+                  <p className="font-semibold text-foreground">{candidate.name}</p>
+                  <p className="text-xs text-muted">
+                    {candidate.borough ? `${candidate.borough} · ` : ""}
+                    {candidate.adaStatus === "full" ? "Fully accessible" : "Accessibility unconfirmed"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {candidate.lines.map((l) => (
+                    <LineBullet key={l} line={l} />
+                  ))}
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+
+  // Case 2: Confirmed or unconfirmed route
   return (
     <section
       aria-label={`Step-free route from ${route.from ?? "origin"} to ${route.to ?? "destination"}`}
-      className="rounded-2xl border border-line bg-surface p-4"
+      className="rounded-2xl border border-line bg-surface p-5 shadow-xs"
     >
-      <p className="text-sm font-medium uppercase tracking-wide text-muted">Step-free route</p>
-      <h3 className="mt-1 text-lg font-semibold leading-snug">
-        {route.from} <span aria-hidden="true">→</span>
-        <span className="sr-only">to</span> {route.to}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+              route.ok
+                ? "bg-ok/15 text-ok"
+                : "bg-bad/15 text-bad"
+            }`}
+          >
+            {route.ok ? "Confirmed Step-Free" : "Cannot Confirm Step-Free"}
+          </span>
+          {route.sourceUpdatedAt && (
+            <span className="text-xs text-muted">
+              MTA Feed: {relativeTime(route.sourceUpdatedAt)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <h3 className="mt-2 text-xl font-bold tracking-tight">
+        {route.from ?? "Origin"} <span aria-hidden="true">→</span>
+        <span className="sr-only">to</span> {route.to ?? "Destination"}
       </h3>
 
       {route.ok && route.legs && route.legs.length > 0 ? (
         <ol className="mt-4 space-y-3">
           {route.legs.map((leg, i) => (
-            <li key={`${leg.line}-${i}`} className="flex items-start gap-3">
+            <li
+              key={`${leg.line}-${i}`}
+              className="flex items-start gap-3 rounded-xl bg-background/60 p-3"
+            >
               <LineBullet line={leg.line} />
-              <div>
-                <p className="font-medium">
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">
                   {leg.from} <span aria-hidden="true">→</span>
                   <span className="sr-only">to</span> {leg.to}
                 </p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {leg.accessibleHops} {leg.accessibleHops === 1 ? "accessible stop" : "accessible stops"} on the {leg.line} train
+                </p>
                 {i < route.legs!.length - 1 && (
-                  <p className="text-sm text-muted">Change here using the elevator.</p>
+                  <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                    Transfer station: use platform/mezzanine elevators
+                  </p>
                 )}
               </div>
             </li>
           ))}
         </ol>
+      ) : route.ok ? (
+        <div className="mt-3 rounded-xl bg-ok/10 p-3.5 text-sm text-ok">
+          <p className="font-semibold flex items-center gap-1.5">
+            <span>✓</span> Origin and destination are the same station ({route.from})
+          </p>
+          <p className="mt-1 text-muted text-xs">
+            No subway ride needed. Accessible elevators for this station are shown below.
+          </p>
+        </div>
       ) : (
-        <p className="mt-3 font-medium text-bad" role="alert">
-          {route.reason ?? "No step-free route found."}
-        </p>
+        <div className="mt-3 rounded-xl bg-bad/10 p-3 text-sm text-bad" role="alert">
+          <p className="font-semibold">Step-free route not viable</p>
+          <p className="mt-0.5">{route.reason ?? "No accessible route found with operating elevators."}</p>
+        </div>
+      )}
+
+      {/* Inspectable Equipment Chain */}
+      {equipment.length > 0 && (
+        <div className="mt-4 rounded-xl border border-line/60 bg-background/40 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Required Elevators &amp; Physical Equipment
+          </p>
+          <div className="mt-2 space-y-3">
+            {equipment.map((st) => (
+              <div key={st.complexId} className="border-t border-line/40 pt-2 first:border-0 first:pt-0">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-foreground">
+                    {st.stationName} ({st.role === "origin" ? "Boarding" : st.role === "destination" ? "Alighting" : "Transfer"})
+                  </span>
+                  <span className={st.hasOutage ? "font-medium text-bad" : "text-ok"}>
+                    {st.hasOutage ? "Outage on route" : "Elevators running"}
+                  </span>
+                </div>
+                {st.elevators.length > 0 ? (
+                  <ul className="mt-1.5 space-y-1.5 text-xs">
+                    {st.elevators.map((el) => (
+                      <li
+                        key={el.equipmentNo}
+                        className={`flex items-start justify-between gap-2 rounded-lg p-2 ${
+                          el.isOut ? "bg-bad/10 border border-bad/20" : "bg-surface"
+                        }`}
+                      >
+                        <div>
+                          <p className="font-mono font-bold text-foreground">
+                            {el.equipmentNo}
+                            {el.isRedundant && <span className="ml-1 text-[10px] text-muted font-normal">(redundant)</span>}
+                          </p>
+                          <p className="text-muted">{el.serving ?? el.shortDescription ?? "Station elevator"}</p>
+                          {el.isOut && el.outageReason && (
+                            <p className="mt-0.5 font-medium text-bad">
+                              Outage: {el.outageReason}
+                              {el.estimatedReturnAt ? ` · Return est: ${nyTime(el.estimatedReturnAt)}` : ""}
+                            </p>
+                          )}
+                          {el.isOut && el.alternativeRoute && (
+                            <p className="mt-1 italic text-muted">
+                              MTA Detour: &ldquo;{el.alternativeRoute}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right whitespace-nowrap">
+                          <span
+                            className={`inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${
+                              el.isOut ? "bg-bad text-white" : "bg-ok/15 text-ok"
+                            }`}
+                          >
+                            {el.isOut ? "OUT" : "OPERATIONAL"}
+                          </span>
+                          {!el.isOut && el.availability12mo != null && (
+                            <p className="mt-0.5 text-[10px] text-muted">
+                              {Math.round(el.availability12mo * 100)}% 12-mo uptime
+                            </p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-xs italic text-muted">No individual elevator units indexed for this platform.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {warnings.length > 0 && (
         <div className="mt-4 rounded-xl bg-warn-bg p-3 text-warn" role="status">
-          <p className="font-semibold">Heads up</p>
-          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
-            {warnings.map((w) => (
-              <li key={w}>{w}</li>
+          <p className="font-semibold text-xs uppercase tracking-wide">MTA Service Advisories</p>
+          <ul className="mt-1 list-disc space-y-1 pl-4 text-xs sm:text-sm">
+            {warnings.map((w, i) => (
+              <li key={i}>{w}</li>
             ))}
           </ul>
         </div>
@@ -78,12 +265,19 @@ export function RouteCard({ route }: { route: RouteOutput }): React.JSX.Element 
         <WatchForm fromId={route.fromId} toId={route.toId} />
       )}
 
-      <p className="mt-4 text-sm text-muted">
-        For travel at {nyTime(route.travelTime)} · data fetched {nyTime(route.fetchedAt)} ·{" "}
-        <a className="underline" href="https://www.mta.info/elevator-escalator-status" target="_blank" rel="noreferrer">
-          confirm on mta.info
+      <footer className="mt-4 border-t border-line/50 pt-3 text-xs text-muted flex flex-wrap items-center justify-between gap-2">
+        <p>
+          MTA feed: {nyTime(route.sourceUpdatedAt)} · Travel time: {nyTime(route.travelTime)}
+        </p>
+        <a
+          className="font-medium text-accent underline hover:opacity-80"
+          href="https://new.mta.info/elevator-escalator-status"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Verify live on mta.info ↗
         </a>
-      </p>
+      </footer>
     </section>
   );
 }
