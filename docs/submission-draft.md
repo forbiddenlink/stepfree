@@ -1,146 +1,110 @@
-# StepFree: Why Transit Accessibility Demands Structured Content (And Why Plain RAG Fails)
-
-*Entry for the DEV Sanity Challenge — Path One: Ship an Agent That Queries Real Content*
-*Tag: #sanitychallenge*
-
+---
+title: StepFree: a subway agent that shows you which elevators your trip depends on
+published: false
+tags: devchallenge, sanitychallenge, sanity, ai
 ---
 
-## 🔗 Submission Links
+*This is a submission for the [Sanity Challenge, Path One: Ship an Agent That Queries Real Content](https://dev.to/challenges/sanity-2026-09-16)*
 
-- **Live Application**: [https://stepfree-alpha.vercel.app](https://stepfree-alpha.vercel.app) *(No login required, instant access)*
-- **GitHub Repository**: [https://github.com/forbiddenlink/stepfree](https://github.com/forbiddenlink/stepfree)
-- **Sanity Project ID**: `19mt1buh`
-- **Public Sanity Dataset Query**: [https://19mt1buh.api.sanity.io/v2026-09-01/data/query/production?query=*[_type==%22stationComplex%22][0...3]](https://19mt1buh.api.sanity.io/v2026-09-01/data/query/production?query=*[_type==%22stationComplex%22][0...3])
-- **Sanity Studio**: [https://stepfree.sanity.studio](https://stepfree.sanity.studio)
+<!-- Snapshot of facts as of 2026-09-26. Re-check every number marked (live) on publish day. -->
 
----
+## What I Built
 
-## 🚇 The Problem: New York's "Elevator Roulette"
+StepFree answers one question for New Yorkers who can't use stairs: can I get from A to B right now, and which elevators is that answer counting on?
 
-For 1.4 million New Yorkers and millions of annual visitors who use wheelchairs, push strollers, travel with heavy luggage, or recover from injuries, navigating the New York City subway is not just about choosing a train—it is an exercise in high-stakes uncertainty.
+A station being "accessible" isn't enough. A trip only works if the elevators work where you board, where you change trains, and where you get off. The elevators at stations you ride through don't matter at all. So StepFree doesn't treat accessibility as a flag on a station. It treats it as a chain of specific elevators, checks each link against the live MTA outage feed, and shows you the chain.
 
-Out of 472 subway stations, barely a third are ADA-accessible. Worse still, even when a station is officially designated "accessible," its elevators average over 25 unplanned breakdowns a year. If a wheelchair user boards a train at 14th Street and arrives at an unfamiliar station only to find the street elevator broken, they are trapped on the platform.
+Ask "Step-free from 1 Av to Times Sq right now?" and you get a route card:
 
-Mainstream navigation apps (Google Maps, Apple Maps, Citymapper) frequently fail these riders. Why?
-1. **Station-level flags lie**: Marking a complex like *14 St–Union Sq* as "accessible" ignores that it has 6 different elevators. If elevator `EL314` is broken, the transfer from the L train to the 4/5/6 is impassable, even though street-to-platform elevators elsewhere in the complex still work.
-2. **Generic LLM RAG fails completely**: A standard vector search over transit PDFs cannot compute graph reachability, cannot evaluate direction-specific platform dependencies, and cannot verify whether an outage at a through-station affects the rider or can be safely bypassed.
+- L from 1 Av to 14 St/6 Av. Board using EL292 or EL293.
+- Change to the 1. Leave the L using EL609-EL612, board the 1 using EL615-EL617.
+- 1 to Times Sq-42 St. Exit using EL231X, EL232, EL233 or EL619.
 
-**StepFree** solves this by treating accessibility as an inspectable, graph-connected, real-time structured content system.
+Every one of those codes is a real MTA elevator, pulled live, with what it serves ("Mezzanine to uptown 1/2/3 platform"), whether it's working, and its availability over the last 12 months. If one of them is out, the route changes or StepFree says it can't confirm the trip and quotes the MTA's own detour text. It never says a route is guaranteed. It labels every result a candidate route, because the MTA data doesn't describe the passage between platforms inside a station, and I'd rather say that than hide it.
 
----
+It also:
 
-## 🏗️ Architecture & How It Works
+- Asks instead of guessing when a name is ambiguous. There are three "72 St" stations, and one of them has no elevator.
+- Answers policy questions (Access-A-Ride, reduced fare, reporting a broken elevator, the 2022 ADA settlement) from a Sanity Knowledge Base, with links to the source.
+- Emails you once when an elevator on a route you saved breaks.
 
-StepFree pairs the **Sanity Content Lake** with **two distinct Sanity Context MCP endpoints**, a deterministic graph-routing engine, and real-time MTA elevator telemetry.
+## Demo
 
-```mermaid
-flowchart TD
-    subgraph Data Feeds
-        MTA_Outages[MTA Live Outages Feed<br/>15-min Cron] --> Ingest[Sanity Ingestion Pipeline]
-        MTA_Equip[MTA Equipment Feed<br/>707 Units, 397 ADA] --> Ingest
-        MTA_History[NY OpenData<br/>10-Year Reliability Metrics] --> Ingest
-        MTA_Legal[2022 ADA Settlement Agreement<br/>500-Page Federal Decree] --> KB_Ingest[Sanity Knowledge Base]
-        MTA_Policy[MTA Accessibility Guides] --> KB_Ingest
-    end
+- Live app, no login: https://stepfree-alpha.vercel.app
+- Try: "Step-free from 1 Av to Times Sq right now?", "Is the elevator at 72 St working?", "What does the 2022 ADA settlement promise, and by when?"
 
-    subgraph Sanity Content Lake
-        Ingest --> Lake[(Sanity Dataset: production)]
-        Lake --> SC[stationComplex]
-        Lake --> EQ[equipment: EL293, EL314]
-        Lake --> OT[outage: live status & detours]
-        Lake --> AM[availabilityMonth: 10-yr history]
-    end
+<!-- TODO(Liz): embed the demo GIF/video here once recorded. -->
 
-    subgraph Sanity Context MCP
-        Lake --> Context_GROQ[GROQ-Mode Endpoint<br/>/stepfree-data<br/>Real-Time Graph & Outages]
-        KB_Ingest --> Context_KB[Knowledge-Base-Mode Endpoint<br/>/stepfree-guide<br/>Settlement & Policy MCP]
-    end
+## Code
 
-    subgraph Next.js 16 AI Agent
-        UI[Rider Web App<br/>Next.js 16 + Tailwind v4 + WCAG AA] --> Chat[Agent Route Handler<br/>Claude 3.5 Sonnet via Vercel AI Gateway]
-        Chat --> Context_GROQ
-        Chat --> Context_KB
-        Chat --> Router[Deterministic Dijkstra<br/>Equipment-Level Router]
-        Router --> Lake
-    end
+https://github.com/forbiddenlink/stepfree
 
-    subgraph Commute Alerts
-        Lake_Private[(Private Dataset: watches)] --> Alert_Cron[15-min Alert Sender<br/>Resend API]
-        Alert_Cron --> Email[Rider Notification Email]
-    end
-```
+- `web/` Next.js app and agent (`web/src/app/api/chat/route.ts`, routing in `web/src/lib/graph.ts`)
+- `studio/` Sanity Studio and schema
+- `ingest/` feed loaders, run by GitHub Actions every 15 minutes
+- `eval/` the evaluation cases and runner used for the numbers below
 
-### Why Two Sanity Context Endpoints?
+![Architecture: MTA feeds into Sanity, two Context MCP endpoints, agent on Vercel](https://raw.githubusercontent.com/forbiddenlink/stepfree/main/docs/architecture.png)
 
-In Sanity Context, an endpoint configured with a dataset source operates in GROQ mode and does not index Knowledge Base sources. Conversely, Knowledge Base mode distills unstructured legal PDFs and websites into verifiable conceptual nodes.
+## How I Used Sanity
 
-StepFree explicitly separates these concerns into two specialized MCP endpoints:
-1. **`stepfree-data` (GROQ Mode)**: Powers live graph adjacency, real-time elevator outages, physical equipment lookups, and 10-year monthly availability rankings.
-2. **`stepfree-guide` (Knowledge Base Mode)**: Ingests the 2022 Federal ADA Settlement Agreement, capital construction commitments, Access-A-Ride policies, and reduced-fare rules.
+### The content model is the routing model
 
----
+Everything lives in one public dataset as linked documents:
 
-## 🔍 Why Structured Content Was Strictly Necessary
+- 445 `stationComplex` documents, each with its lines, borough, ADA status, the names of the stations inside it, and 340 `adaNeighbors` edges to the next accessible station per line and direction.
+- 707 `equipment` documents (429 elevators, 397 of them ADA), each referencing its complex and the lines it serves, with the MTA's detour text and a precomputed 12-month reliability summary over two years of monthly history.
+- `outage` documents that reference the equipment that's out. The ingest never deletes one. When an outage leaves the feed it's marked resolved, so StepFree has kept its own per-outage history since September 19: 857 outages tracked, 808 resolved (live).
+- One `ingestRun` document written in the same transaction as each outage update, so "how fresh is this" is a fact, not a guess from the newest outage.
 
-The core prompt of the Sanity Challenge asks:
-> *"The strongest submissions will show an agent that only works because the content was structured. If a keyword search would have gotten you the same answer, aim higher."*
+The route search walks (station, line) pairs over the `adaNeighbors` graph. A transfer, a boarding or an exit is allowed only when a working ADA elevator at that station is listed for that line. That rule is one reference hop (`outage -> equipment -> lines[]`), and it's the difference between "this station is accessible" and "this trip is". A keyword search can't answer it, and neither can embeddings over a PDF of station lists.
 
-Transit routing across broken infrastructure cannot be solved with keyword search. Consider what happens when a rider asks:
-> *"Step-free from 1 Av to Times Sq right now?"*
+That rule also makes the answer better. My first version blocked a whole station if any elevator in it was out. Times Sq has a dozen elevators, so it was almost never routable. Scoping each outage to the lines its elevator serves took 394 random station pairs from 323 routable to 333, without allowing a single trip that lacks a working elevator for a line it uses.
 
-To answer this reliably, the system must evaluate a 6-step relational chain:
-1. **Resolve Origin & Destination**: Disambiguate station names (e.g. distinguishing the three separate "72 St" stations in NYC).
-2. **Traverse Step-Free Adjacency**: Walk the `adaNeighbors` graph edges connecting accessible stations, computing the optimal path (1 Av $\to$ 14 St-Union Sq on the L, transfer to the N/Q/R/W to Times Sq-42 St).
-3. **Inspect Station Accessibility**: Confirm both origin and destination have `adaStatus: "full"` platform access.
-4. **Identify Physical Equipment**: Extract the exact required elevators along the path:
-   - Origin: `EL292` / `EL293` (Street to L platform).
-   - Transfer: `EL312` (L platform to mezzanine) $\to$ `EL314` (mezzanine to Uptown platform).
-   - Destination: `EL101` / `EL102` (platform to street).
-5. **Cross-Reference Temporal Outages**: Query live outages matching those exact equipment codes. Crucially, an elevator outage at *8 Av* or *3 Av* (stations the train passes through) must **not** invalidate the trip, because riding through a station does not require its elevators. But an outage on transfer elevator `EL314` **must** break the route.
-6. **Surface Verifiable Evidence & Detours**: If an elevator is out, quote the official MTA `alternativeRoute` detour verbatim, calculate historical 12-month reliability, and cite the live feed timestamp.
+### Two Context endpoints, on purpose
 
-None of this is possible with flat text or naive embeddings. It requires Sanity's TypeScript schemas, deterministic GROQ graph queries, and typed relational references.
+- `stepfree-data` (GROQ mode) over the production dataset. The agent uses it for systemwide questions like "which accessible elevators have been out the most this year" with `groq_query` and `schema_explorer`.
+- `stepfree-guide` (Knowledge Base mode) over the MTA accessibility pages and the 2022 settlement agreement. The agent reads it with `initial_context` and `knowledge_base_read` for policy answers.
 
----
+They're separate because an endpoint with a dataset source ignores Knowledge Base sources. The Free plan also caps a Knowledge Base at 150 indexed documents. My first build tried to index the 395 ADA detour texts too and failed at 453 of 150. Detours are structured data anyway, so they stayed in GROQ mode and the Knowledge Base kept the prose.
 
-## 🏆 Key Features & Usability
+### What the agent does with it
 
-1. **Inspectable Physical Equipment Chain**:
-   Every route result expands into an itemized elevator list showing equipment numbers (`EL293`), serving directions (`Street to Brooklyn-bound platform`), operating status, and 12-month uptime percentage.
-2. **Smart Station Disambiguation**:
-   Queries like `"72 St"` do not guess. StepFree detects ambiguity and renders interactive selection buttons with line bullets (`1/2/3`, `B/C`, `Q`) and borough tags.
-3. **MTA Detour Alerts**:
-   When an elevator is out, StepFree explains why the trip cannot be confirmed and quotes the exact MTA-prescribed bus/subway detour.
-4. **WCAG 2.1 AA Compliant & Accessible Markdown**:
-   High-contrast color tokens, full screen-reader announcements (`aria-live="polite"`), and an accessible Markdown renderer with clickable citations.
-5. **Commute Watch & Private Dataset**:
-   Riders can subscribe to automated alerts for their daily commute. If an elevator on their specific route breaks, they receive an email alert. Subscriber emails live in an isolated private Sanity dataset (`watches`), completely inaccessible to the public AI agent.
+The model doesn't plan routes. Two typed tools do that from live GROQ reads (no CDN), and the model explains the result. It can call the Context tools directly for anything the route tools don't cover. The route card, the station card, and the station chooser render straight from tool output, so what you see isn't paraphrased by the model.
 
----
+## How I checked it
 
-## 🧪 4 Judge Test Scenarios to Try
+I wrote 24 questions across routes, ambiguous names, station status, policy, systemwide data and safety (prompt injection, a station that doesn't exist, an off-topic question). A script sends each one to the live app and grades it with fixed checks: which tool ran, what the tool returned, text the answer must contain (the "check mta.info/elevators" line, an elevator code, a source link) and text it must never contain ("guaranteed to work", a wrong settlement milestone). No model grades another model.
 
-You can test these directly on the live app with one click:
+Run on 2026-09-26 against the live app ([eval/results/2026-09-26.json](https://github.com/forbiddenlink/stepfree/blob/main/eval/results/2026-09-26.json)):
 
-| Scenario | Try Asking | What StepFree Proves |
-| :--- | :--- | :--- |
-| **1. Accessible Transfer** | *"Step-free from 1 Av to Times Sq right now?"* | Computes multi-leg journey, verifies transfer elevators at 14 St-Union Sq, displays equipment uptime. |
-| **2. Single-Station Status** | *"Is the elevator at 161 St–Yankee Stadium working?"* | Returns a dedicated `ElevatorStatusCard` showing all elevators, uptime percentages, and live MTA feed time. |
-| **3. Station Ambiguity** | *"Step-free from 72 St to Atlantic Av"* | Detects 3 separate 72 St stations and presents interactive selection options instead of hallucinating. |
-| **4. Policy & Legal Deadline** | *"What does the 2022 ADA settlement promise, and by when?"* | Queries the Knowledge Base MCP, citing the 2055 systemwide deadline and 2045 95% milestone with clickable source documents. |
+- 23 of 24 questions passed, 87 of 88 individual checks.
+- Routes 6/6, ambiguous names 4/4, station status 3/4, policy 5/5, systemwide data 2/2, safety 3/3.
+- Latency: p50 10.4 s, p95 20.8 s, worst 22.3 s. That's end to end, streaming included.
 
----
+The one failure is fair. Asked "Are the elevators at Grand Central working right now?", the agent answered correctly, but the elevator codes were only on the status card, not in the sentence. My check reads the sentence. I left the check as written rather than loosen it after seeing the result.
 
-## 📊 Evaluation & Verification
+Plus 68 unit tests on the routing, matching, feed validation, alert links and rendering, run in CI on every push.
 
-- **42 Offline Unit Tests** (`vitest run`): 100% passing across graph traversal, feed validation, station disambiguation, watch token security, and markdown parsing.
-- **Strict TypeScript & ESLint**: 0 errors, 0 warnings across root, web app, and Sanity Studio.
-- **Fail-Closed Safety**: Ingestion rejects corrupted feed snapshots; routing refuses feeds older than 60 minutes.
+## What went wrong, and what I changed
 
----
+- **The agent answered for the wrong 72 St.** 121 of 445 complex names in the source data end in "- Station", so "72 St" matched only the one stop without that suffix. That stop has no elevator, and the agent confidently said so. Worse, "Fulton St" matched only the G stop in Brooklyn, because the Manhattan hub is named "Fulton St (A,C,J,Z,2,3,4,5)". Names are cleaned at ingest now, each complex carries its stations' names ("Atlantic Av-Barclays Ctr" is the station, "Atlantic Av/Pacific St" is the complex), and the agent asks whenever more than one station fits. It never picks one for you.
+- **The Knowledge Base misread a table.** The settlement's RFP schedule has a column saying 25% of the designated stations were already "Completed" when it was signed, then 60% by the end of 2023. The Knowledge Base summarized that as "25% by end of 2023". It also lists the settlement as a source without a URL, so the agent borrowed another source's link. I checked section 7 of the PDF, serve the PDF with the app, and give the agent the corrected milestone and the right link.
+- **"Confirmed step-free" was a claim I couldn't back up.** Station-level ADA status doesn't prove every platform connects. Routes are now candidates with named evidence, and the card says what isn't verified.
+- **A hardening pass broke production twice.** A test in the web app imported a module that needed a root-only dependency, so every Vercel build failed typecheck, and pinning pnpm in two places stopped the 15-minute outage ingest. The app refuses outage data older than an hour, so within an hour it would have refused every trip. CI now builds on every push, and the freshness check comes from an explicit ingest record.
 
-## 💡 What We Learned & Limitations
+## Limitations
 
-- **What AI Got Wrong**: When given flat station lists, LLMs routinely hallucinated that any station with an elevator allowed step-free line transfers. Modeling physical equipment in Sanity as discrete `equipment` documents connected to `stationComplex` and `adaNeighbor` edges was the single change that eliminated route hallucinations.
-- **Knowledge Base Discovery**: Two Context endpoints are necessary when combining quantitative operational data (GROQ) with qualitative legal texts (Knowledge Base).
-- **Current Limitation**: StepFree relies on official MTA feeds. While feeds update approximately every 15 minutes, unannounced outages or immediate breakdowns can take 10–20 minutes to reflect in the feed. StepFree explicitly reports `sourceUpdatedAt` to ensure riders know the data's freshness.
+- In-station passages aren't modeled. A route through 14 St/6 Av uses a passage between two stations, and the data says the elevators exist but not that the passage is step-free.
+- The MTA outage feed can lag a real breakdown, and StepFree polls it every 15 minutes, so the card shows when the feed was last updated. Always check mta.info/elevators before you leave.
+- Direction isn't modeled. If the uptown platform elevator is out, StepFree also refuses the downtown trip at that station. That errs on the safe side, but it's stricter than it needs to be, and it's the next thing I'd fix.
+
+## Sanity Project Details
+
+- Project ID: `19mt1buh`
+- Public dataset: `production` ([sample query](https://19mt1buh.api.sanity.io/v2026-09-01/data/query/production?query=*%5B_type%3D%3D%22stationComplex%22%20%26%26%20name%3D%3D%2272%20St%22%5D%7Bname%2CadaStatus%2CstopNames%2C%22lines%22%3Alines%5B%5D-%3Ecode%7D))
+- Studio: https://stepfree.sanity.studio
+
+## Agent Session
+
+<!-- TODO(Liz): upload a curated Claude Code transcript at https://dev.to/agent_sessions/new, check it for keys and email addresses, click Make Public, and embed it here. -->
