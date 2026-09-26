@@ -1,0 +1,43 @@
+flowchart TB
+  subgraph feeds["1. Public MTA data"]
+    direction LR
+    OUT["Elevator outage feed<br/>ingested every 15 min"]
+    EQ["Equipment feed<br/>707 units, 397 ADA elevators"]
+    ST["Stations + monthly availability<br/>data.ny.gov"]
+    WEB["mta.info accessibility pages<br/>2022 ADA settlement PDF"]
+  end
+
+  subgraph lake["2. Sanity: project 19mt1buh"]
+    direction LR
+    PROD[("production dataset, public<br/>stationComplex, line, equipment,<br/>outage, ingestRun")]
+    KB["Knowledge Base<br/>11 entries with sources"]
+    WATCH[("watches dataset, private<br/>commute alerts")]
+  end
+
+  subgraph ctx["3. Sanity Context MCP"]
+    direction LR
+    GROQ["stepfree-data<br/>GROQ mode"]
+    GUIDE["stepfree-guide<br/>Knowledge Base mode"]
+  end
+
+  subgraph app["4. StepFree on Vercel"]
+    direction LR
+    CHAT["Agent<br/>Claude Sonnet 5 via AI Gateway"]
+    ROUTER["Route + station tools<br/>search over (station, line),<br/>one working elevator per line used"]
+  end
+
+  RIDER(["Rider"])
+
+  OUT --> PROD
+  EQ --> PROD
+  ST --> PROD
+  WEB --> KB
+  PROD --> GROQ
+  KB --> GUIDE
+  GROQ --> CHAT
+  GUIDE --> CHAT
+  PROD -->|live GROQ, no CDN| ROUTER
+  ROUTER --> CHAT
+  CHAT -->|answer + elevator evidence + source links| RIDER
+  PROD -->|new outage on a saved route| WATCH
+  WATCH -->|email| RIDER
