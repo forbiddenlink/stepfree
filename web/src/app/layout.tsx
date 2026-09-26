@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "StepFree: the NYC subway without stairs",
   description:
-    "Plan step-free subway trips in New York City using live MTA elevator outages, ten years of elevator reliability, and MTA accessibility policy.",
+    "Plan step-free subway trips in New York City using live MTA elevator outages, two years of monthly elevator reliability, and MTA accessibility policy.",
 };
 
 export const viewport: Viewport = {

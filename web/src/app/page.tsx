@@ -61,7 +61,7 @@ export default function Home(): React.JSX.Element {
           </span>
         </div>
         <p className="mt-2 text-muted">
-          The NYC subway without stairs. Live elevator outages, ten years of elevator reliability, and MTA
+          The NYC subway without stairs. Live elevator outages, two years of elevator reliability, and MTA
           accessibility policy, in one verified answer.
         </p>
       </header>
@@ -97,7 +97,7 @@ export default function Home(): React.JSX.Element {
               <p className="font-semibold text-foreground">How StepFree answers</p>
               <p className="mt-1">
                 A route depends on specific elevators at the stations where you board, change trains, and get off.
-                StepFree keeps stations, lines, elevators, live outages, and ten years of reliability as linked
+                StepFree keeps stations, lines, elevators, live outages, and two years of monthly reliability as linked
                 records in Sanity, searches only paths where each of those elevators is working, and shows you
                 which ones it relied on. Policy answers come from MTA pages and the 2022 ADA settlement, with links.
               </p>
