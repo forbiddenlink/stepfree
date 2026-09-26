@@ -1,24 +1,14 @@
 // Runs every 15 minutes (GitHub Actions). Idempotent: deterministic _ids, createIfNotExists + patch.
 // Outages that vanish from the feed are marked resolved, which builds per-outage history over time.
-import {FEEDS, equipmentId, getJson, nyLocalToIso, sanity} from './lib'
-
-type OutageRow = {
-  equipment: string
-  outagedate: string
-  estimatedreturntoservice: string
-  reason: string
-  isupcomingoutage: string
-  ismaintenanceoutage: string
-}
+import {FEEDS, equipmentId, getJson, nyLocalToIso, sanity, validateOutageFeed} from './lib'
 
 async function main(): Promise<void> {
   const client = sanity()
   const now = new Date().toISOString()
-  const feed = await getJson<OutageRow[]>(FEEDS.outages)
-  // Fail closed: an empty or broken feed must never mass-resolve every open outage.
-  if (!Array.isArray(feed) || feed.length === 0) throw new Error('Outage feed empty or malformed; refusing to resolve anything')
-
+  const feed = await getJson<unknown>(FEEDS.outages)
   const knownEquipment = new Set<string>(await client.fetch('*[_type == "equipment"].equipmentNo'))
+  // Validate every row before building mutations: a broken snapshot must never mass-resolve outages.
+  validateOutageFeed(feed, knownEquipment)
   const seen = new Set<string>()
   const tx = client.transaction()
   let skipped = 0

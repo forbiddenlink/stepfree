@@ -4,6 +4,7 @@
 //   guide (Knowledge Base mode): 2022 ADA settlement deadline == 2055 (settlement PDF)
 import {Client} from '@modelcontextprotocol/sdk/client/index.js'
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import {sanity} from './lib.js'
 
 const ORG = 'https://api.sanity.io/v1/context/organizations/ogCe1C0tU/mcp'
 const token = process.env.SANITY_CONTEXT_TOKEN
@@ -27,18 +28,26 @@ async function connect(name: string): Promise<Client> {
 }
 
 async function checkData(): Promise<boolean> {
+  const query =
+    '*[_type=="equipment" && kind=="elevator" && isAda && defined(reliability.availability12mo)] | order(reliability.availability12mo asc)[0...3]{equipmentNo, "station": complex->name, "availability": reliability.availability12mo}'
+  let expectedCodes: string[] = []
+  try {
+    const independent = await sanity().fetch<Array<{equipmentNo: string}>>(query)
+    expectedCodes = independent.map((e) => e.equipmentNo)
+  } catch (err) {
+    console.warn('Could not run independent public query, falling back to known bottom units:', err)
+    expectedCodes = ['EL290X', 'EL131']
+  }
+
   const client = await connect('stepfree-data')
   const res = await client.callTool({
     name: 'groq_query',
-    arguments: {
-      query:
-        '*[_type=="equipment" && kind=="elevator" && isAda && defined(reliability.availability12mo)] | order(reliability.availability12mo asc)[0...3]{equipmentNo, "station": complex->name, "availability": reliability.availability12mo}',
-    },
+    arguments: {query},
   })
   const text = textOf(res)
   await client.close()
-  const pass = text.includes('EL290X') && text.includes('EL131')
-  console.log(`[stepfree-data] ${pass ? 'GO' : 'NO-GO'}: least reliable ADA elevators`)
+  const pass = expectedCodes.length > 0 && expectedCodes.every((code) => text.includes(code))
+  console.log(`[stepfree-data] ${pass ? 'GO' : 'NO-GO'}: least reliable ADA elevators (${expectedCodes.join(', ')})`)
   return pass
 }
 

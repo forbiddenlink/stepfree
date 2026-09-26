@@ -34,6 +34,34 @@ export const ref = (id: string, key?: string) => ({_type: 'reference' as const, 
 
 export const NON_SUBWAY = new Set(['LIRR', 'METRO-NORTH', 'SIR'])
 
+export type OutageRow = {
+  equipment: string
+  outagedate: string
+  estimatedreturntoservice: string
+  reason: string
+  isupcomingoutage: string
+  ismaintenanceoutage: string
+}
+
+export function validateOutageFeed(feed: unknown, knownEquipment: Set<string>): asserts feed is OutageRow[] {
+  if (!Array.isArray(feed) || feed.length === 0) throw new Error('Outage feed empty or malformed; refusing to resolve anything')
+  for (const row of feed) {
+    if (!row || typeof row !== 'object'
+      || typeof row.equipment !== 'string' || !row.equipment.trim()
+      || typeof row.outagedate !== 'string' || !nyLocalToIso(row.outagedate)
+      || typeof row.estimatedreturntoservice !== 'string'
+      || (row.estimatedreturntoservice !== '' && !nyLocalToIso(row.estimatedreturntoservice))
+      || typeof row.reason !== 'string'
+      || !['Y', 'N'].includes(row.isupcomingoutage)
+      || !['Y', 'N'].includes(row.ismaintenanceoutage)) {
+      throw new Error('Malformed outage row; refusing to resolve anything')
+    }
+  }
+  if (!feed.some((row) => knownEquipment.has(row.equipment))) {
+    throw new Error('No recognized equipment in outage feed; refusing to resolve anything')
+  }
+}
+
 // MTA feed timestamps are New York local time: "09/28/2026 10:00:00 PM".
 export function nyLocalToIso(value: string | undefined): string | undefined {
   if (!value) return undefined
