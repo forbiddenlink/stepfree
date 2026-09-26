@@ -17,6 +17,8 @@ export type Complex = {
   adaStatus?: 'full' | 'partial' | 'none'
   borough?: string
   lines?: string[]
+  /** Names of the stations inside the complex, e.g. "Atlantic Av-Barclays Ctr" in "Atlantic Av/Pacific St". */
+  stopNames?: string[]
   edges: Edge[]
 }
 export type Outage = {
@@ -237,22 +239,30 @@ export function findStepFreeRoute(
       )
     }
   }
-  if (degraded.has(fromId) || degraded.has(toId)) {
-    const equipmentOnRoute = buildEquipmentOnRoute([fromId, toId], fromId, toId, byId, equipment, outages, at)
-    return {
-      ok: false,
-      reason: 'An elevator outage affects boarding or leaving this route. Step-free access cannot be confirmed.',
-      warnings,
-      equipmentOnRoute,
-    }
-  }
+  const endpointOutage = degraded.has(fromId) || degraded.has(toId)
+  const endpointFailure = (): RouteResult => ({
+    ok: false,
+    reason: 'An elevator outage affects boarding or leaving this route. Step-free access cannot be confirmed.',
+    warnings,
+    equipmentOnRoute: buildEquipmentOnRoute([fromId, toId], fromId, toId, byId, equipment, outages, at),
+  })
   if (fromId === toId) {
+    if (endpointOutage) return endpointFailure()
     const equipmentOnRoute = buildEquipmentOnRoute([fromId], fromId, toId, byId, equipment, outages, at)
     return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId], keyComplexes: [fromId], equipmentOnRoute, evidence: [], basis: 'Origin and destination are the same station. No trip is needed.'}
   }
 
   const working = workingElevatorsByLine(equipment, outages, at)
-  const served = (complex: string, line: string): string[] => working.get(complex)?.get(line) ?? []
+  // An outage blocks a line at a complex if the out elevator is listed for that line. An out elevator
+  // with no known lines blocks every line there: unknown is never treated as unaffected.
+  const linesOf = new Map((equipment ?? []).map((e) => [e.equipmentNo, e.lines ?? []]))
+  const blocked = (complex: string, line: string): boolean =>
+    (degraded.get(complex) ?? []).some((o) => {
+      const lines = linesOf.get(o.equipmentNo)
+      return !lines || lines.length === 0 || lines.includes(line)
+    })
+  const served = (complex: string, line: string): string[] =>
+    blocked(complex, line) ? [] : (working.get(complex)?.get(line) ?? [])
 
   const adj = adjacency(complexes)
   // Dijkstra over (complex, line). Small graph (~340 edges): a sorted array is plenty.
@@ -289,13 +299,13 @@ export function findStepFreeRoute(
       else if (
         s.complex !== fromId &&
         byId.get(s.complex)?.adaStatus === 'full' &&
-        !degraded.has(s.complex) &&
         served(s.complex, s.line).length &&
         served(s.complex, e.line).length
       ) relax({complex: s.complex, line: e.line}, TRANSFER_COST)
     }
   }
   if (!goal) {
+    if (endpointOutage) return endpointFailure()
     const equipmentOnRoute = buildEquipmentOnRoute([fromId, toId], fromId, toId, byId, equipment, outages, at)
     return {
       ok: false,
@@ -338,6 +348,11 @@ export function findStepFreeRoute(
   }
   keyComplexes.push(toId)
   evidence.push(evidenceAt(goal))
+  for (const [complex, line] of [[fromId, path[0].line], [toId, goal.line]] as const) {
+    if (degraded.has(complex)) {
+      warnings.push(`${byId.get(complex)?.name ?? complex}: the elevator that is out is listed for other lines, not the ${line} this route uses.`)
+    }
+  }
   const equipmentOnRoute = buildEquipmentOnRoute(keyComplexes, fromId, toId, byId, equipment, outages, at)
   return {
     ok: true,

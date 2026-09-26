@@ -129,6 +129,21 @@ describe('line evidence', () => {
     expect(route(noQ, [], 'A', 'C', eq.filter((e) => e.equipmentNo !== 'EL-A1')).ok).toBe(false)
   })
 
+  it('boards when the elevator that is out serves a different line, and says so', () => {
+    const out: Outage[] = [{complexId: 'A', equipmentNo: 'EL-AQ', status: 'active', reason: 'Repair'}]
+    const r = route(net, out, 'A', 'C')
+    expect(r.ok).toBe(true)
+    expect(r.warnings.join(' ')).toContain('listed for other lines, not the 1 this route uses')
+  })
+
+  it('refuses boarding when the elevator that is out serves the boarding line', () => {
+    const out: Outage[] = [{complexId: 'A', equipmentNo: 'EL-A1', status: 'active', reason: 'Repair'}]
+    const noQ = net.map((c) => (c.complexId === 'A' ? {...c, edges: c.edges.filter((e) => e.lines[0] !== 'Q')} : c))
+    const r = route(noQ, out, 'A', 'C')
+    expect(r.ok).toBe(false)
+    expect(!r.ok && r.reason).toContain('boarding or leaving')
+  })
+
   it('treats missing equipment data as unknown, never as step-free', () => {
     expect(route(net, [], 'A', 'C', []).ok).toBe(false)
   })
