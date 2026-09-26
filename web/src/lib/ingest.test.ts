@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {validateOutageFeed} from '../../../ingest/lib'
+import {validateOutageFeed} from '../../../ingest/feed'
 
 const row = {
   equipment: 'EL1', outagedate: '09/23/2026 10:00:00 AM',
