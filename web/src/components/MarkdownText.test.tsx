@@ -35,3 +35,11 @@ describe('MarkdownText', () => {
     expect(html).toContain('MTA Detour: Take the M14A bus to 4th Ave.')
   })
 })
+
+describe('MarkdownText same-origin links', () => {
+  it('links a root-relative document but not a protocol-relative URL', () => {
+    const html = renderToStaticMarkup(<MarkdownText content={'[PDF](/docs/a.pdf) and [x](//evil.example)'} />)
+    expect(html).toContain('href="/docs/a.pdf"')
+    expect(html).not.toContain('href="//evil.example"')
+  })
+})
