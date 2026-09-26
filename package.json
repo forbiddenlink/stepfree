@@ -2,11 +2,14 @@
   "name": "stepfree",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "ingest:static": "tsx --env-file=.env.local ingest/static.ts",
     "ingest:outages": "tsx --env-file=.env.local ingest/outages.ts",
     "check:context": "tsx --env-file=.env.local ingest/context-check.ts",
-    "notify": "tsx --env-file=.env.local ingest/notify.ts"
+    "notify": "tsx --env-file=.env.local ingest/notify.ts",
+    "test": "pnpm --dir web test",
+    "check": "tsc --noEmit && pnpm --dir web typecheck && pnpm --dir web lint && pnpm --dir studio exec tsc --noEmit && pnpm test"
   },
   "dependencies": {
     "@sanity/client": "^7.27.0"
