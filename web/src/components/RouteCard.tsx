@@ -1,4 +1,4 @@
-import type { Leg, StationEquipment } from "@/lib/graph";
+import type { Leg, LineEvidence, StationEquipment } from "@/lib/graph";
 import { LineBullet } from "./LineBullet";
 import { StationChoice, type StationCandidate } from "./StationChoice";
 import { WatchForm } from "./WatchForm";
@@ -22,6 +22,8 @@ export type RouteOutput = {
   transfers?: string[];
   warnings?: string[];
   equipmentOnRoute?: StationEquipment[];
+  evidence?: LineEvidence[];
+  basis?: string;
   fetchedAt?: string;
   sourceUpdatedAt?: string;
   travelTime?: string;
@@ -56,6 +58,13 @@ export function RouteCard({
 }): React.JSX.Element {
   const warnings = route.warnings ?? [];
   const equipment = route.equipmentOnRoute ?? [];
+  const evidence = route.evidence ?? [];
+  const usedElevators = new Set(evidence.flatMap((e) => e.elevators));
+  // evidence runs board, (leave, board) per transfer, alight: leg i boards at 2i and leaves at 2i+1
+  const legEvidence = (i: number): { board?: LineEvidence; exit?: LineEvidence } => ({
+    board: evidence[2 * i],
+    exit: evidence[2 * i + 1],
+  });
 
   // Case 1: more than one station matches; the rider chooses, never the agent
   if (route.ambiguous && route.candidates && route.candidates.length > 0) {
@@ -79,11 +88,11 @@ export function RouteCard({
                 : "bg-bad/15 text-bad"
             }`}
           >
-            {route.ok ? "Confirmed Step-Free" : "Cannot Confirm Step-Free"}
+            {route.ok ? "Candidate step-free route" : "Cannot confirm step-free"}
           </span>
           {route.sourceUpdatedAt && (
             <span className="text-xs text-muted">
-              MTA Feed: {relativeTime(route.sourceUpdatedAt)}
+              MTA feed updated {relativeTime(route.sourceUpdatedAt)}
             </span>
           )}
         </div>
@@ -93,6 +102,7 @@ export function RouteCard({
         {route.from ?? "Origin"} <span aria-hidden="true">→</span>
         <span className="sr-only">to</span> {route.to ?? "Destination"}
       </h3>
+      {route.ok && route.basis && <p className="mt-1 text-xs text-muted">{route.basis}</p>}
 
       {route.ok && route.legs && route.legs.length > 0 ? (
         <ol className="mt-4 space-y-3">
@@ -110,11 +120,27 @@ export function RouteCard({
                 <p className="mt-0.5 text-xs text-muted">
                   {leg.accessibleHops} {leg.accessibleHops === 1 ? "accessible stop" : "accessible stops"} on the {leg.line} train
                 </p>
-                {i < route.legs!.length - 1 && (
-                  <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-                    Transfer station: use platform/mezzanine elevators
-                  </p>
-                )}
+                {(() => {
+                  const { board, exit } = legEvidence(i);
+                  if (!board && !exit) return null;
+                  return (
+                    <p className="mt-1 text-xs text-muted">
+                      {board && (
+                        <>
+                          {i === 0 ? "Board" : "Change to this train"} using{" "}
+                          <span className="font-mono font-semibold text-foreground">{board.elevators.join(", ")}</span>
+                        </>
+                      )}
+                      {board && exit && " · "}
+                      {exit && (
+                        <>
+                          {i === route.legs!.length - 1 ? "Exit" : "Leave the train"} using{" "}
+                          <span className="font-mono font-semibold text-foreground">{exit.elevators.join(", ")}</span>
+                        </>
+                      )}
+                    </p>
+                  );
+                })()}
               </div>
             </li>
           ))}
@@ -139,7 +165,7 @@ export function RouteCard({
       {equipment.length > 0 && (
         <div className="mt-4 rounded-xl border border-line/60 bg-background/40 p-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Required Elevators &amp; Physical Equipment
+            Elevators at these stations
           </p>
           <div className="mt-2 space-y-3">
             {equipment.map((st) => (
@@ -149,7 +175,7 @@ export function RouteCard({
                     {st.stationName} ({st.role === "origin" ? "Boarding" : st.role === "destination" ? "Alighting" : "Transfer"})
                   </span>
                   <span className={st.hasOutage ? "font-medium text-bad" : "text-ok"}>
-                    {st.hasOutage ? "Outage on route" : "Elevators running"}
+                    {st.hasOutage ? "Elevator out here" : "All elevators running"}
                   </span>
                 </div>
                 {st.elevators.length > 0 ? (
@@ -165,6 +191,9 @@ export function RouteCard({
                           <p className="font-mono font-bold text-foreground">
                             {el.equipmentNo}
                             {el.isRedundant && <span className="ml-1 text-[10px] text-muted font-normal">(redundant)</span>}
+                            {usedElevators.has(el.equipmentNo) && (
+                              <span className="ml-1 rounded-sm bg-accent/15 px-1 text-[10px] font-semibold text-accent">on your route</span>
+                            )}
                           </p>
                           <p className="text-muted">{el.serving ?? el.shortDescription ?? "Station elevator"}</p>
                           {el.isOut && el.outageReason && (
@@ -185,7 +214,7 @@ export function RouteCard({
                               el.isOut ? "bg-bad text-white" : "bg-ok/15 text-ok"
                             }`}
                           >
-                            {el.isOut ? "OUT" : "OPERATIONAL"}
+                            {el.isOut ? "Out" : "Working"}
                           </span>
                           {!el.isOut && el.availability12mo != null && (
                             <p className="mt-0.5 text-[10px] text-muted">

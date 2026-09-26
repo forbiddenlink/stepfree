@@ -4,6 +4,11 @@
 // rider boards, alights, or transfers. The search runs over (complex, line) states:
 // riding one hop costs 1, changing lines inside a complex costs TRANSFER_COST and is only
 // allowed where that complex's accessible elevators are expected to be working.
+//
+// Evidence rule: a line can be boarded, left, or changed at a complex only if a working ADA
+// elevator there is listed by the MTA as serving that line. No listed elevator = unknown, and
+// unknown is never treated as step-free. This still does not prove the in-station passage
+// between two platforms, so every result is a CANDIDATE route that names its evidence.
 
 export type Edge = {direction: 'north' | 'south'; to: string; lines: string[]}
 export type Complex = {
@@ -57,6 +62,8 @@ export type StationEquipment = {
   hasOutage: boolean
 }
 
+export type LineEvidence = {complexId: string; stationName: string; line: string; elevators: string[]}
+
 export type Leg = {line: string; from: string; to: string; accessibleHops: number} // hops between ACCESSIBLE stations, not every stop
 export type RouteResult =
   | {
@@ -67,6 +74,9 @@ export type RouteResult =
       complexesUsed: string[]
       keyComplexes: string[]
       equipmentOnRoute?: StationEquipment[]
+      /** Working ADA elevators that serve each line at each place the rider boards, changes, or alights. */
+      evidence: LineEvidence[]
+      basis: string
     }
   | {
       ok: false
@@ -76,6 +86,23 @@ export type RouteResult =
     }
 
 export const TRANSFER_COST = 3
+
+export const ROUTE_BASIS =
+  'Candidate route. Each boarding, transfer, and exit uses a working ADA elevator that the MTA lists for that line. ' +
+  'The passage between platforms inside a station is not independently verified.'
+
+/** complexId -> line -> working ADA elevators the MTA lists for that line. */
+export function workingElevatorsByLine(equipment: EquipmentInfo[] | undefined, outages: Outage[], at: Date): Map<string, Map<string, string[]>> {
+  const out = new Set(outages.filter((o) => isOutAt(o, at)).map((o) => o.equipmentNo))
+  const index = new Map<string, Map<string, string[]>>()
+  for (const eq of equipment ?? []) {
+    if (out.has(eq.equipmentNo)) continue
+    const byLine = index.get(eq.complexId) ?? new Map<string, string[]>()
+    for (const line of eq.lines ?? []) byLine.set(line, [...(byLine.get(line) ?? []), eq.equipmentNo])
+    index.set(eq.complexId, byLine)
+  }
+  return index
+}
 
 /** An elevator counts as out at `at` if active now, or scheduled to be out at that time. */
 export function isOutAt(o: Outage, at: Date): boolean {
@@ -221,8 +248,11 @@ export function findStepFreeRoute(
   }
   if (fromId === toId) {
     const equipmentOnRoute = buildEquipmentOnRoute([fromId], fromId, toId, byId, equipment, outages, at)
-    return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId], keyComplexes: [fromId], equipmentOnRoute}
+    return {ok: true, legs: [], transfers: [], warnings, complexesUsed: [fromId], keyComplexes: [fromId], equipmentOnRoute, evidence: [], basis: 'Origin and destination are the same station. No trip is needed.'}
   }
+
+  const working = workingElevatorsByLine(equipment, outages, at)
+  const served = (complex: string, line: string): string[] => working.get(complex)?.get(line) ?? []
 
   const adj = adjacency(complexes)
   // Dijkstra over (complex, line). Small graph (~340 edges): a sorted array is plenty.
@@ -230,6 +260,7 @@ export function findStepFreeRoute(
   const prev = new Map<string, State>()
   const queue: Array<{s: State; d: number}> = []
   for (const e of adj.get(fromId) ?? []) {
+    if (!served(fromId, e.line).length) continue
     const s = {complex: fromId, line: e.line}
     if (!dist.has(key(s))) {
       dist.set(key(s), 0)
@@ -241,7 +272,7 @@ export function findStepFreeRoute(
     queue.sort((a, b) => a.d - b.d)
     const {s, d} = queue.shift()!
     if (d > (dist.get(key(s)) ?? Infinity)) continue
-    if (s.complex === toId) {
+    if (s.complex === toId && served(toId, s.line).length) {
       goal = s
       break
     }
@@ -255,14 +286,21 @@ export function findStepFreeRoute(
     }
     for (const e of adj.get(s.complex) ?? []) {
       if (e.line === s.line) relax({complex: e.to, line: e.line}, 1)
-      else if (s.complex !== fromId && byId.get(s.complex)?.adaStatus === 'full' && !degraded.has(s.complex)) relax({complex: s.complex, line: e.line}, TRANSFER_COST)
+      else if (
+        s.complex !== fromId &&
+        byId.get(s.complex)?.adaStatus === 'full' &&
+        !degraded.has(s.complex) &&
+        served(s.complex, s.line).length &&
+        served(s.complex, e.line).length
+      ) relax({complex: s.complex, line: e.line}, TRANSFER_COST)
     }
   }
   if (!goal) {
     const equipmentOnRoute = buildEquipmentOnRoute([fromId, toId], fromId, toId, byId, equipment, outages, at)
     return {
       ok: false,
-      reason: 'No step-free route found in the MTA accessible-station graph with the elevators expected to be working.',
+      reason:
+        'No step-free route found where every boarding, transfer, and exit has a working ADA elevator listed for that line.',
       warnings,
       equipmentOnRoute,
     }
@@ -270,6 +308,13 @@ export function findStepFreeRoute(
 
   const path: State[] = []
   for (let cur: State | undefined = goal; cur; cur = prev.get(key(cur))) path.unshift(cur)
+  const evidenceAt = (s: State): LineEvidence => ({
+    complexId: s.complex,
+    stationName: byId.get(s.complex)?.name ?? s.complex,
+    line: s.line,
+    elevators: served(s.complex, s.line),
+  })
+  const evidence: LineEvidence[] = [evidenceAt(path[0])]
   const legs: Leg[] = []
   const transfers: string[] = []
   // Where the rider actually uses elevators: board, each transfer, alight. Watches alert on these.
@@ -278,6 +323,7 @@ export function findStepFreeRoute(
     const a = path[i - 1]
     const b = path[i]
     if (a.complex === b.complex) {
+      evidence.push(evidenceAt(a), evidenceAt(b))
       transfers.push(byId.get(a.complex)?.name ?? a.complex)
       keyComplexes.push(a.complex)
       continue
@@ -291,6 +337,17 @@ export function findStepFreeRoute(
     }
   }
   keyComplexes.push(toId)
+  evidence.push(evidenceAt(goal))
   const equipmentOnRoute = buildEquipmentOnRoute(keyComplexes, fromId, toId, byId, equipment, outages, at)
-  return {ok: true, legs, transfers, warnings, complexesUsed: [...new Set(path.map((p) => p.complex))], keyComplexes, equipmentOnRoute}
+  return {
+    ok: true,
+    legs,
+    transfers,
+    warnings,
+    complexesUsed: [...new Set(path.map((p) => p.complex))],
+    keyComplexes,
+    equipmentOnRoute,
+    evidence,
+    basis: ROUTE_BASIS,
+  }
 }

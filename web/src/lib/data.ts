@@ -49,7 +49,8 @@ export async function loadNetwork(): Promise<{
   const [complexes, outages, equipment, sourceUpdatedAt] = await Promise.all([
     sanity.fetch<Complex[]>(GRAPH_QUERY),
     sanity.fetch<Outage[]>(OUTAGE_QUERY),
-    sanity.fetch<EquipmentInfo[]>(EQUIPMENT_QUERY).catch(() => []),
+    // No catch: without elevator data every route would look impossible, which is a failure, not an answer.
+    sanity.fetch<EquipmentInfo[]>(EQUIPMENT_QUERY),
     sanity.fetch<string | null>('*[_type == "outage" && defined(lastSeenAt)] | order(lastSeenAt desc)[0].lastSeenAt'),
   ])
   const age = sourceUpdatedAt ? Date.now() - Date.parse(sourceUpdatedAt) : NaN
