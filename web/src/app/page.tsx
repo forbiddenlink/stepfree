@@ -17,11 +17,11 @@ const limitedFetch: typeof fetch = async (input, init) => {
 };
 
 const EXAMPLES = [
-  { label: "Accessible Trip", prompt: "Step-free from 1 Av to Times Sq right now?" },
-  { label: "Station Elevators", prompt: "Is the elevator at 161 St–Yankee Stadium working?" },
-  { label: "Ambiguous Station", prompt: "Step-free from 72 St to Atlantic Av" },
-  { label: "Worst Reliability", prompt: "Which accessible elevators broke down most this year?" },
-  { label: "ADA Settlement", prompt: "What does the 2022 ADA settlement promise, and by when?" },
+  { label: "Plan a trip", prompt: "Step-free from 1 Av to Times Sq right now?" },
+  { label: "Check a station", prompt: "Is the elevator at 161 St–Yankee Stadium working?" },
+  { label: "Same-name stations", prompt: "Step-free from 72 St to Atlantic Av" },
+  { label: "Least reliable elevators", prompt: "Which accessible elevators have been out the most over the last year?" },
+  { label: "Your rights", prompt: "What does the 2022 ADA settlement promise, and by when?" },
 ];
 
 type Part = { type: string; text?: string; state?: string; output?: unknown; error?: unknown };
@@ -33,6 +33,7 @@ export default function Home(): React.JSX.Element {
   });
   const busy = status === "submitted" || status === "streaming";
   const bottom = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
@@ -43,6 +44,11 @@ export default function Home(): React.JSX.Element {
     if (!t || busy) return;
     void sendMessage({ text: t });
     setInput("");
+    // Example and station-choice buttons disappear after a send; keep keyboard focus in the page.
+    const from = document.activeElement;
+    setTimeout(() => {
+      if (!from || !from.isConnected || from === document.body) inputRef.current?.focus({ preventScroll: true });
+    }, 0);
   };
 
   return (
@@ -60,12 +66,12 @@ export default function Home(): React.JSX.Element {
         </p>
       </header>
 
-      <div aria-live="polite" aria-busy={busy} className="flex-1 space-y-4">
+      <div role="log" aria-label="Conversation" aria-live="polite" aria-busy={busy} className="flex-1 space-y-4">
         {messages.length === 0 && (
           <section aria-label="Example questions" className="space-y-4">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
-                Judge Demos &amp; Key Scenarios
+                Try a question
               </p>
               <ul className="grid gap-2 sm:grid-cols-2">
                 {EXAMPLES.map((ex) => (
@@ -88,11 +94,12 @@ export default function Home(): React.JSX.Element {
             </div>
 
             <div className="rounded-xl border border-line/60 bg-surface/50 p-4 text-xs text-muted leading-relaxed">
-              <p className="font-semibold text-foreground">Why Structured Content Matters</p>
+              <p className="font-semibold text-foreground">How StepFree answers</p>
               <p className="mt-1">
-                Standard search or keyword RAG cannot compute multi-hop accessible paths across physical equipment
-                dependencies or evaluate live New York elevator outages. StepFree connects the Sanity Content Lake
-                with deterministic graph traversal and the 2022 Federal ADA Settlement Knowledge Base.
+                A route depends on specific elevators at the stations where you board, change trains, and get off.
+                StepFree keeps stations, lines, elevators, live outages, and ten years of reliability as linked
+                records in Sanity, searches only paths where each of those elevators is working, and shows you
+                which ones it relied on. Policy answers come from MTA pages and the 2022 ADA settlement, with links.
               </p>
             </div>
           </section>
@@ -143,20 +150,20 @@ export default function Home(): React.JSX.Element {
                 if (p.type.startsWith("tool-") && p.state === "output-error") {
                   return (
                     <p key={i} className="text-sm font-medium text-bad" role="status">
-                      A live MTA telemetry tool encountered a temporary error.
+                      Couldn&rsquo;t reach live MTA data. Try again in a moment, and check mta.info/elevators before you travel.
                     </p>
                   );
                 }
                 if (p.type.startsWith("tool-") && p.state !== "output-available") {
                   const label = p.type.includes("guide_")
-                    ? "Searching MTA accessibility policy & legal settlement terms…"
+                    ? "Reading MTA accessibility policy…"
                     : p.type.includes("stepFreeRoute")
-                      ? "Planning step-free route & evaluating elevator status…"
+                      ? "Planning a step-free route…"
                       : p.type.includes("checkStationElevators")
-                        ? "Inspecting station elevator equipment & outages…"
-                        : "Querying live elevator telemetry & reliability history…";
+                        ? "Checking this station’s elevators…"
+                        : "Looking up MTA elevator data…";
                   return (
-                    <div key={i} className="flex items-center gap-2 text-sm text-muted animate-pulse">
+                    <div key={i} className="flex items-center gap-2 text-sm text-muted motion-safe:animate-pulse">
                       <span className="inline-block h-2 w-2 rounded-full bg-accent" />
                       <span>{label}</span>
                     </div>
@@ -189,6 +196,7 @@ export default function Home(): React.JSX.Element {
           Ask about a step-free trip or an elevator
         </label>
         <input
+          ref={inputRef}
           id="q"
           value={input}
           onChange={(e) => setInput(e.target.value)}
