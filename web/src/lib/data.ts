@@ -94,7 +94,10 @@ export function matchStation(complexes: Complex[], query: string): Complex[] {
   // A complex is known by its own name and by the names of the stations inside it.
   const namesOf = (c: Complex): string[] => [c.name, ...(c.stopNames ?? [])]
   const exact = complexes.filter((c) => namesOf(c).some((n) => norm(n) === q))
-  if (exact.length === 1) return exact
+  // "Atlantic Av" is exactly the L stop, but "Atlantic Av-Barclays Ctr" starts the same way and is what
+  // most riders mean. An exact match is decisive only when no other station name begins with it.
+  const extended = complexes.filter((c) => !exact.includes(c) && namesOf(c).some((n) => norm(n).startsWith(`${q} `)))
+  if (exact.length === 1) return [...exact, ...extended]
 
   const tokens = q.split(' ').filter(Boolean)
   function scoreName(c: Complex, n: string): number {

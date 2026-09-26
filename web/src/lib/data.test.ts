@@ -11,7 +11,13 @@ describe('matchStation', () => {
   })
   it('prefers an exact station name without including looser matches', () => {
     const exact = {complexId: '1', name: '72 St', edges: []}
-    expect(matchStation([exact, {complexId: '2', name: '172 St', edges: []}, {complexId: '3', name: '72 St / Broadway', edges: []}], '72 St')).toEqual([exact])
+    expect(matchStation([exact, {complexId: '2', name: '172 St', edges: []}], '72 St')).toEqual([exact])
+  })
+
+  it('keeps stations whose name starts with an exact match, so the rider can choose', () => {
+    const lStop = {complexId: '133', name: 'Atlantic Av', edges: []}
+    const barclays = {complexId: '617', name: 'Atlantic Av/Pacific St', stopNames: ['Atlantic Av-Barclays Ctr'], edges: []}
+    expect(resolveStation([lStop, barclays], 'Atlantic Av')).toEqual({kind: 'ambiguous', candidates: [lStop, barclays]})
   })
 
   it('retains multiple stations with the same name for clarification', () => {
