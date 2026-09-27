@@ -300,7 +300,7 @@ export function RouteCard({
                               </span>
                             )}
                             {usedElevators.has(el.equipmentNo) && (
-                              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                              <span className="rounded-full border border-accent/40 px-2 py-0.5 text-[10px] font-semibold text-accent">
                                 on your route
                               </span>
                             )}
@@ -309,7 +309,7 @@ export function RouteCard({
                             {el.serving ?? el.shortDescription ?? "Station elevator"}
                           </p>
                           {el.isOut && el.outageReason && (
-                            <p className="mt-1.5 rounded-lg bg-bad/15 px-2.5 py-1 text-xs font-semibold text-bad">
+                            <p className="mt-1.5 rounded-lg bg-bad/10 px-2.5 py-1 text-xs font-semibold text-bad">
                               Outage: {el.outageReason}
                               {el.estimatedReturnAt ? ` · Return est: ${nyTime(el.estimatedReturnAt)}` : ""}
                             </p>
@@ -323,7 +323,7 @@ export function RouteCard({
                         <div className="text-right shrink-0 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                              el.isOut ? "bg-bad text-white" : "bg-ok/15 text-ok"
+                              el.isOut ? "bg-bad-solid text-white" : "bg-ok/15 text-ok"
                             }`}
                           >
                             {el.isOut ? <AlertCircleIcon className="h-2.5 w-2.5" /> : <CheckCircleIcon className="h-2.5 w-2.5" />}
