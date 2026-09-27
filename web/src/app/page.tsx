@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { RouteCard, type RouteOutput } from "@/components/RouteCard";
 import { ElevatorStatusCard, type StationStatusOutput } from "@/components/ElevatorStatusCard";
 import { MarkdownText } from "@/components/MarkdownText";
+import { LineBullet } from "@/components/LineBullet";
+import { ElevatorIcon } from "@/components/Icons";
 
 const RATE_LIMITED = "RATE_LIMITED";
 
@@ -16,10 +18,10 @@ const limitedFetch: typeof fetch = async (input, init) => {
   return res;
 };
 
-const EXAMPLES = [
-  { label: "Plan a trip", prompt: "Step-free from 1 Av to Times Sq right now?" },
-  { label: "Check a station", prompt: "Is the elevator at 161 St–Yankee Stadium working?" },
-  { label: "Same-name stations", prompt: "Step-free from 72 St to Atlantic Av" },
+const EXAMPLES: Array<{ label: string; prompt: string; lines?: string[] }> = [
+  { label: "Plan a trip", prompt: "Step-free from 1 Av to Times Sq right now?", lines: ["L", "1"] },
+  { label: "Check a station", prompt: "Is the elevator at 161 St–Yankee Stadium working?", lines: ["4", "B", "D"] },
+  { label: "Same-name stations", prompt: "Step-free from 72 St to Atlantic Av", lines: ["Q", "2", "3"] },
   { label: "Least reliable elevators", prompt: "Which accessible elevators have been out the most over the last year?" },
   { label: "Your rights", prompt: "What does the 2022 ADA settlement promise, and by when?" },
 ];
@@ -54,13 +56,19 @@ export default function Home(): React.JSX.Element {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pb-4">
       <header className="py-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">StepFree</h1>
-          <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
-            NYC Transit Agent
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold tracking-tight">StepFree</h1>
+            <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+              NYC Transit Agent
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-ok/30 bg-ok/10 px-3 py-1 text-xs font-semibold text-ok">
+            <span className="h-2 w-2 rounded-full bg-ok motion-safe:animate-pulse" />
+            <span>MTA Outage Feed Live</span>
+          </div>
         </div>
-        <p className="mt-2 text-muted">
+        <p className="mt-2.5 text-muted leading-relaxed">
           The NYC subway without stairs. Live elevator outages, two years of elevator reliability, and MTA
           accessibility policy, in one verified answer.
         </p>
@@ -79,11 +87,22 @@ export default function Home(): React.JSX.Element {
                     <button
                       type="button"
                       onClick={() => send(ex.prompt)}
-                      className="group flex min-h-12 w-full flex-col justify-between rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-accent hover:bg-surface/80 focus-visible:outline-2 focus-visible:outline-accent"
+                      className="group flex min-h-14 w-full flex-col justify-between rounded-xl border border-line bg-surface p-3.5 text-left transition-all hover:border-accent hover:bg-surface/90 focus-visible:outline-2 focus-visible:outline-accent shadow-2xs"
                     >
-                      <span className="text-xs font-bold text-accent group-hover:underline">
-                        {ex.label}
-                      </span>
+                      <div className="flex items-center justify-between gap-1 w-full">
+                        <span className="text-xs font-bold text-accent group-hover:underline">
+                          {ex.label}
+                        </span>
+                        {ex.lines && (
+                          <span className="flex shrink-0 items-center -space-x-1">
+                            {ex.lines.map((l) => (
+                              <span key={l} className="scale-75 origin-right">
+                                <LineBullet line={l} />
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </div>
                       <span className="mt-1 text-sm font-medium text-foreground/90">
                         {ex.prompt}
                       </span>
@@ -94,7 +113,10 @@ export default function Home(): React.JSX.Element {
             </div>
 
             <div className="rounded-xl border border-line/60 bg-surface/50 p-4 text-xs text-muted leading-relaxed">
-              <p className="font-semibold text-foreground">How StepFree answers</p>
+              <p className="font-semibold text-foreground flex items-center gap-1.5">
+                <ElevatorIcon className="h-3.5 w-3.5 text-accent" />
+                <span>How StepFree answers</span>
+              </p>
               <p className="mt-1">
                 A route depends on specific elevators at the stations where you board, change trains, and get off.
                 StepFree keeps stations, lines, elevators, live outages, and two years of monthly reliability as linked

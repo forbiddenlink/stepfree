@@ -1,5 +1,5 @@
 // Subway service bullets. Colors are the public trunk-line colors riders already read on signs.
-const COLORS: Record<string, { bg: string; fg: string }> = {
+export const LINE_COLORS: Record<string, { bg: string; fg: string }> = {
   "1": { bg: "#EE352E", fg: "#fff" },
   "2": { bg: "#EE352E", fg: "#fff" },
   "3": { bg: "#EE352E", fg: "#fff" },
@@ -25,8 +25,12 @@ const COLORS: Record<string, { bg: string; fg: string }> = {
   S: { bg: "#808183", fg: "#fff" },
 };
 
+export function getLineColor(line: string): { bg: string; fg: string } {
+  return LINE_COLORS[line] ?? { bg: "#55595f", fg: "#fff" };
+}
+
 export function LineBullet({ line }: { line: string }): React.JSX.Element {
-  const c = COLORS[line] ?? { bg: "#55595f", fg: "#fff" };
+  const c = getLineColor(line);
   return (
     <span
       className="inline-flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 text-sm font-bold"

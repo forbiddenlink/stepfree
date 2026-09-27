@@ -84,7 +84,7 @@ Run on 2026-09-26 against the live app ([eval/results/2026-09-26.json](https://g
 
 The one failure is fair. Asked "Are the elevators at Grand Central working right now?", the agent answered correctly, but the elevator codes were only on the status card, not in the sentence. My check reads the sentence. I left the check as written rather than loosen it after seeing the result.
 
-Plus 68 unit tests on the routing, matching, feed validation, alert links and rendering, run in CI on every push.
+Plus 71 unit tests on the routing, matching, feed validation, alert links and rendering, run in CI on every push.
 
 ## What went wrong, and what I changed
 
