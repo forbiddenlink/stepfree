@@ -98,9 +98,9 @@ export function ElevatorStatusCard({
         {elevators.length} {elevators.length === 1 ? "accessible elevator" : "accessible elevators"} tracked
       </p>
 
-      {/* Elevators List */}
+      {/* Elevators List: out-of-service first, so a quick scan hits the thing that matters before the reassuring rows. */}
       <div className="mt-4 space-y-2.5">
-        {elevators.map((el) => (
+        {[...elevators].sort((a, b) => Number(b.isOut) - Number(a.isOut)).map((el) => (
           <div
             key={el.equipmentNo}
             className={`rounded-xl border p-3 transition-colors ${
@@ -163,7 +163,7 @@ export function ElevatorStatusCard({
       <footer className="mt-4 border-t border-line/50 pt-3 text-xs text-muted flex flex-wrap items-center justify-between gap-2">
         <span>MTA Live Status: {nyTime(status.sourceUpdatedAt)}</span>
         <a
-          className="font-medium text-accent underline hover:opacity-80"
+          className="inline-flex min-h-11 items-center font-medium text-accent underline hover:opacity-80"
           href="https://new.mta.info/elevator-escalator-status"
           target="_blank"
           rel="noreferrer"

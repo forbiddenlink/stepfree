@@ -54,7 +54,7 @@ export default async function WatchPage({ searchParams }: PageProps<"/watch">): 
       </section>
 
       <p className="mt-8 text-center text-sm">
-        <Link href="/" className="font-semibold text-accent underline hover:opacity-80">
+        <Link href="/" className="inline-flex min-h-11 items-center font-semibold text-accent underline hover:opacity-80">
           ← Return to StepFree trip planner
         </Link>
       </p>
