@@ -281,7 +281,8 @@ export function RouteCard({
                 </div>
                 {st.elevators.length > 0 ? (
                   <ul className="mt-2 space-y-2 text-xs">
-                    {st.elevators.map((el) => (
+                    {/* Out-of-service elevators sort first so a quick scan hits the thing that matters before the reassuring rows. */}
+                    {[...st.elevators].sort((a, b) => Number(b.isOut) - Number(a.isOut)).map((el) => (
                       <li
                         key={el.equipmentNo}
                         className={`flex items-start justify-between gap-3 rounded-xl p-3 border transition-colors ${
@@ -378,7 +379,7 @@ export function RouteCard({
           MTA feed: {nyTime(route.sourceUpdatedAt)} · Checked for: {nyTime(route.travelTime)}
         </p>
         <a
-          className="font-medium text-accent underline hover:opacity-80"
+          className="inline-flex min-h-11 items-center font-medium text-accent underline hover:opacity-80"
           href="https://new.mta.info/elevator-escalator-status"
           target="_blank"
           rel="noreferrer"
