@@ -34,7 +34,7 @@ export function StationChoice({
       aria-label={`More than one station matches ${query ?? "your search"}`}
       className="rounded-2xl border border-accent/40 bg-surface p-5 shadow-xs"
     >
-      <span className="inline-flex items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-accent">
+      <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
         Choose a station
       </span>
       <h3 className="mt-2 text-lg font-bold">Which &ldquo;{query}&rdquo; do you mean?</h3>

@@ -147,8 +147,8 @@ export function RouteCard({
         </ol>
       ) : route.ok ? (
         <div className="mt-3 rounded-xl bg-ok/10 p-3.5 text-sm text-ok">
-          <p className="font-semibold flex items-center gap-1.5">
-            <span>✓</span> Origin and destination are the same station ({route.from})
+          <p className="font-semibold">
+            Origin and destination are the same station ({route.from})
           </p>
           <p className="mt-1 text-muted text-xs">
             No subway ride needed. Accessible elevators for this station are shown below.
@@ -192,7 +192,7 @@ export function RouteCard({
                             {el.equipmentNo}
                             {el.isRedundant && <span className="ml-1 text-[10px] text-muted font-normal">(redundant)</span>}
                             {usedElevators.has(el.equipmentNo) && (
-                              <span className="ml-1 rounded-sm bg-accent/15 px-1 text-[10px] font-semibold text-accent">on your route</span>
+                              <span className="ml-1 rounded-sm bg-accent/10 px-1 text-[10px] font-semibold text-accent">on your route</span>
                             )}
                           </p>
                           <p className="text-muted">{el.serving ?? el.shortDescription ?? "Station elevator"}</p>
@@ -251,7 +251,7 @@ export function RouteCard({
 
       <footer className="mt-4 border-t border-line/50 pt-3 text-xs text-muted flex flex-wrap items-center justify-between gap-2">
         <p>
-          MTA feed: {nyTime(route.sourceUpdatedAt)} · Travel time: {nyTime(route.travelTime)}
+          MTA feed: {nyTime(route.sourceUpdatedAt)} · Checked for: {nyTime(route.travelTime)}
         </p>
         <a
           className="font-medium text-accent underline hover:opacity-80"

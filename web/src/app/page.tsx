@@ -56,7 +56,7 @@ export default function Home(): React.JSX.Element {
       <header className="py-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">StepFree</h1>
-          <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+          <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
             NYC Transit Agent
           </span>
         </div>
@@ -114,7 +114,7 @@ export default function Home(): React.JSX.Element {
             <div
               className={
                 m.role === "user"
-                  ? "max-w-[85%] rounded-2xl bg-accent px-4 py-2.5 text-white"
+                  ? "max-w-[85%] rounded-2xl bg-accent-solid px-4 py-2.5 text-white"
                   : "w-full space-y-3"
               }
             >
@@ -207,7 +207,7 @@ export default function Home(): React.JSX.Element {
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="min-h-12 rounded-xl bg-accent px-5 font-semibold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
+          className="min-h-12 rounded-xl bg-accent-solid px-5 font-semibold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
         >
           Ask
         </button>

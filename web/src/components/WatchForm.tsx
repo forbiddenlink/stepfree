@@ -63,7 +63,7 @@ export function WatchForm({ fromId, toId }: { fromId: string; toId: string }): R
         <button
           type="submit"
           disabled={state.kind === "sending"}
-          className="min-h-12 rounded-xl bg-accent px-4 font-semibold text-white disabled:opacity-50"
+          className="min-h-12 rounded-xl bg-accent-solid px-4 font-semibold text-white disabled:opacity-50"
         >
           {state.kind === "sending" ? "Sending…" : "Watch"}
         </button>
