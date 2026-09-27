@@ -18,8 +18,11 @@
   /* Same dark-mode-lightening issue as --accent-solid above: --bad lightens to
      #ff8a80 for text/tint use, which fails WCAG AA as a solid fill under white
      text (2.28:1, measured with axe-core). bad-solid stays this saturated red
-     in both themes so solid "out of service" badges keep AA contrast. */
-  --bad-solid: #b3261e;
+     in both themes so solid "out of service" badges keep contrast: #9c1a14
+     under white text measures ~8.2:1, past the AAA bar (7:1) for the small
+     bold text these badges use, since this is the single most safety-critical
+     status label in the app. */
+  --bad-solid: #9c1a14;
 }
 
 @theme inline {
