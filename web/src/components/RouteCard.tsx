@@ -300,7 +300,7 @@ export function RouteCard({
                               </span>
                             )}
                             {usedElevators.has(el.equipmentNo) && (
-                              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent">
                                 on your route
                               </span>
                             )}
@@ -375,7 +375,7 @@ export function RouteCard({
 
       <footer className="mt-4 border-t border-line/50 pt-3 text-xs text-muted flex flex-wrap items-center justify-between gap-2">
         <p>
-          MTA feed: {nyTime(route.sourceUpdatedAt)} · Travel time: {nyTime(route.travelTime)}
+          MTA feed: {nyTime(route.sourceUpdatedAt)} · Checked for: {nyTime(route.travelTime)}
         </p>
         <a
           className="font-medium text-accent underline hover:opacity-80"

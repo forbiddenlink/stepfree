@@ -7,6 +7,10 @@
   --muted: #55595f;
   --line: #d9d6ce;
   --accent: #0b5cd5;
+  /* Dark mode lightens --accent for text/links; that same light blue fails WCAG AA
+     as a solid button fill under white text (2.19:1, measured with axe-core).
+     accent-solid stays this saturated blue in both themes so buttons keep ~6:1 contrast. */
+  --accent-solid: #0b5cd5;
   --ok: #10703a;
   --warn: #8a4b00;
   --warn-bg: #fff4e0;
@@ -20,6 +24,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-warn-bg: var(--warn-bg);

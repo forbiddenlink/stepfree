@@ -16,7 +16,7 @@ export default async function WatchPage({ searchParams }: PageProps<"/watch">): 
         <Link href="/" className="text-2xl font-extrabold tracking-tight hover:opacity-80">
           StepFree
         </Link>
-        <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+        <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
           Elevator Alerts
         </span>
       </header>

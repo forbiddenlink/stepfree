@@ -16,7 +16,7 @@ export function WatchAction({action, token}: {action: 'confirm' | 'stop'; token:
     <form action={formAction} className="space-y-3">
       <input type="hidden" name="a" value={action} />
       <input type="hidden" name="t" value={token} />
-      <button type="submit" disabled={pending} className="min-h-12 rounded-xl bg-accent px-5 font-semibold text-white disabled:opacity-50">
+      <button type="submit" disabled={pending} className="min-h-12 rounded-xl bg-accent-solid px-5 font-semibold text-white disabled:opacity-50">
         {action === 'confirm' ? 'Turn on elevator alerts' : 'Stop these alerts'}
       </button>
       {state.message && (
