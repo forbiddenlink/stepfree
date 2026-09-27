@@ -123,7 +123,7 @@ export function ElevatorStatusCard({
               <div className="text-right whitespace-nowrap">
                 <span
                   className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold ${
-                    el.isOut ? "bg-bad text-white" : "bg-ok/15 text-ok"
+                    el.isOut ? "bg-bad-solid text-white" : "bg-ok/15 text-ok"
                   }`}
                 >
                   {el.isOut ? <AlertCircleIcon className="h-2.5 w-2.5" /> : <CheckCircleIcon className="h-2.5 w-2.5" />}
