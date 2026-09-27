@@ -10,24 +10,31 @@ export default async function WatchPage({searchParams}: PageProps<'/watch'>): Pr
   const action = a === 'confirm' || a === 'stop' ? a : undefined
   const token = typeof t === 'string' ? t : undefined
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10">
-      <h1 className="text-3xl font-bold tracking-tight">StepFree alerts</h1>
-      <div className="mt-6">
-        {action && token ? (
-          <>
-            <p className="mb-4 text-muted">
-              {action === 'confirm'
-                ? 'Get one email when an accessible elevator breaks at a station where you board, transfer, or get off.'
-                : 'Stop elevator alerts for this route.'}
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-10">
+      <Link href="/" className="text-2xl font-bold tracking-tight hover:opacity-80">
+        StepFree
+      </Link>
+      <section className="mt-6 rounded-2xl border border-line bg-surface p-5 shadow-xs">
+        <h1 className="text-xl font-bold tracking-tight">StepFree alerts</h1>
+        <div className="mt-4">
+          {action && token ? (
+            <>
+              <p className="mb-4 text-sm text-muted leading-relaxed">
+                {action === 'confirm'
+                  ? 'Get one email when an accessible elevator breaks at a station where you board, transfer, or get off.'
+                  : 'Stop elevator alerts for this route.'}
+              </p>
+              <WatchAction action={action} token={token} />
+            </>
+          ) : (
+            <p role="alert" className="rounded-xl bg-bad/10 p-3.5 text-sm font-medium text-bad">
+              This link is not valid.
             </p>
-            <WatchAction action={action} token={token} />
-          </>
-        ) : (
-          <p role="alert">This link is not valid.</p>
-        )}
-      </div>
-      <p className="mt-8">
-        <Link href="/" className="underline">
+          )}
+        </div>
+      </section>
+      <p className="mt-6 text-center text-sm">
+        <Link href="/" className="font-semibold text-accent underline hover:opacity-80">
           Plan a step-free trip
         </Link>
       </p>
