@@ -11,7 +11,7 @@ export function WatchForm({ fromId, toId }: { fromId: string; toId: string }): R
 
   if (state.kind === "sent") {
     return (
-      <p role="status" className="mt-4 rounded-xl border border-line p-3 text-sm">
+      <p role="status" className="mt-4 rounded-xl border border-line bg-surface p-3.5 text-sm text-ok font-medium">
         {state.message}
       </p>
     );
@@ -42,34 +42,35 @@ export function WatchForm({ fromId, toId }: { fromId: string; toId: string }): R
   };
 
   return (
-    <form onSubmit={submit} className="mt-4 border-t border-line pt-4">
-      <label htmlFor={id} className="block font-medium">
+    <form onSubmit={submit} className="mt-4 border-t border-line/60 pt-4">
+      <label htmlFor={id} className="block text-sm font-bold text-foreground">
         Email me if an elevator on this route breaks
       </label>
-      <p id={`${id}-hint`} className="text-sm text-muted">
+      <p id={`${id}-hint`} className="mt-0.5 text-xs text-muted">
         One email per outage. You confirm first, and every email has a stop link.
       </p>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2.5 flex gap-2">
         <input
           id={id}
           type="email"
           required
           autoComplete="email"
           aria-describedby={`${id}-hint`}
+          placeholder="your.email@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="min-h-12 flex-1 rounded-xl border border-line bg-background px-4 text-base"
+          className="min-h-11 flex-1 rounded-xl border border-line bg-background/80 px-3.5 text-sm focus-visible:outline-2 focus-visible:outline-accent"
         />
         <button
           type="submit"
           disabled={state.kind === "sending"}
-          className="min-h-12 rounded-xl bg-accent-solid px-4 font-semibold text-white disabled:opacity-50"
+          className="min-h-11 rounded-xl bg-accent-solid px-4 font-semibold text-white transition-opacity disabled:opacity-50 text-sm focus-visible:outline-2 focus-visible:outline-accent"
         >
           {state.kind === "sending" ? "Sending…" : "Watch"}
         </button>
       </div>
       {state.kind === "error" && (
-        <p role="alert" className="mt-2 text-sm text-bad">
+        <p role="alert" className="mt-2 text-xs font-semibold text-bad">
           {state.message}
         </p>
       )}

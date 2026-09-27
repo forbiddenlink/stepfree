@@ -15,6 +15,11 @@
   --warn: #8a4b00;
   --warn-bg: #fff4e0;
   --bad: #b3261e;
+  /* Same dark-mode-lightening issue as --accent-solid above: --bad lightens to
+     #ff8a80 for text/tint use, which fails WCAG AA as a solid fill under white
+     text (2.28:1, measured with axe-core). bad-solid stays this saturated red
+     in both themes so solid "out of service" badges keep AA contrast. */
+  --bad-solid: #b3261e;
 }
 
 @theme inline {
@@ -29,6 +34,7 @@
   --color-warn: var(--warn);
   --color-warn-bg: var(--warn-bg);
   --color-bad: var(--bad);
+  --color-bad-solid: var(--bad-solid);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
