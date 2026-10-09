@@ -22,11 +22,11 @@
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
-    "@sanity/eslint-config-studio": "^7",
+    "@sanity/eslint-config-studio": "7.0.0",
     "@types/react": "^19.2.14",
-    "eslint": "^10.8.1",
-    "prettier": "^3.5",
-    "typescript": "^5.8"
+    "eslint": "10.11.0",
+    "prettier": "3.9.8",
+    "typescript": "5.9.3"
   },
   "prettier": {
     "bracketSpacing": false,
