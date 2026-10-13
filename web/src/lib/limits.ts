@@ -39,9 +39,17 @@ export function createLimiter(opts: {limit: number; windowMs: number; maxKeys?: 
     hit(key, now = Date.now()) {
       const b = buckets.get(key)
       if (!b || now - b.start >= opts.windowMs) {
+        if (b) buckets.delete(key)
         if (buckets.size >= maxKeys) {
           for (const [k, v] of buckets) if (now - v.start >= opts.windowMs) buckets.delete(k)
-          if (buckets.size >= maxKeys) buckets.clear()
+          // Still full: evict the oldest keys that are under their limit. Never evict a blocked key,
+          // or flooding the table with fresh keys would reset the attacker's own counter.
+          for (const [k, v] of buckets) {
+            if (buckets.size < maxKeys) break
+            if (v.count <= opts.limit) buckets.delete(k)
+          }
+          // Every remaining key is blocked: fail closed for the new key rather than drop a block.
+          if (buckets.size >= maxKeys) return false
         }
         buckets.set(key, {start: now, count: 1})
         return true
@@ -105,6 +113,10 @@ type MessageLike = {role?: string; parts?: PartLike[]}
 const textLength = (m: MessageLike): number =>
   (m.parts ?? []).reduce((n, p) => n + (p.type === 'text' && typeof p.text === 'string' ? p.text.length : 0), 0)
 
+/** Size of every part, text or not. The client sends the whole history, so tool or data parts on assistant messages are client-controlled too. */
+const partsLength = (m: MessageLike): number =>
+  (m.parts ?? []).reduce((n, p) => n + (p.type === 'text' && typeof p.text === 'string' ? p.text.length : JSON.stringify(p).length), 0)
+
 /** Returns a rider-facing reason when the conversation is too big, else null. */
 export function checkChatSize(messages: MessageLike[]): string | null {
   if (messages.length > CHAT_LIMITS.maxMessages) return 'Too many messages in this conversation. Start a new chat.'
@@ -115,7 +127,7 @@ export function checkChatSize(messages: MessageLike[]): string | null {
     const n = textLength(m)
     // Assistant replies in history can be long; only a rider-typed message gets the per-message cap.
     if (m.role === 'user' && n > CHAT_LIMITS.maxMessageChars) return 'That message is too long. Shorten it and try again.'
-    total += n
+    total += partsLength(m)
   }
   return total > CHAT_LIMITS.maxTotalChars ? 'This conversation is too long. Start a new chat.' : null
 }

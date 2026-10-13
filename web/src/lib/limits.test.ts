@@ -41,6 +41,14 @@ describe('createLimiter', () => {
     l.hit('a', 0)
     expect(l.hit('a', 1001)).toBe(true)
   })
+
+  it('does not reset an over-limit key when the key table fills with fresh keys', () => {
+    const l = createLimiter({limit: 1, windowMs: 1000, maxKeys: 3})
+    l.hit('attacker', 0)
+    expect(l.hit('attacker', 1)).toBe(false)
+    for (const k of ['f1', 'f2', 'f3', 'f4']) l.hit(k, 2)
+    expect(l.hit('attacker', 3)).toBe(false)
+  })
 })
 
 describe('clientIp', () => {
@@ -66,6 +74,16 @@ describe('checkChatSize', () => {
     const each = 'y'.repeat(CHAT_LIMITS.maxMessageChars)
     const many = Array.from({length: Math.ceil(CHAT_LIMITS.maxTotalChars / CHAT_LIMITS.maxMessageChars) + 1}, () => msg('user', each))
     expect(checkChatSize(many)).toMatch(/too long/i)
+  })
+
+  it('counts assistant text toward the total, since the client supplies the history', () => {
+    const big = 'z'.repeat(CHAT_LIMITS.maxTotalChars + 1)
+    expect(checkChatSize([msg('assistant', big), msg('user', 'hi')])).toMatch(/too long/i)
+  })
+
+  it('counts non-text parts on assistant messages toward the total', () => {
+    const tool = {role: 'assistant', parts: [{type: 'tool-lookup', output: 'q'.repeat(CHAT_LIMITS.maxTotalChars + 1)}]}
+    expect(checkChatSize([tool as never, msg('user', 'hi')])).toMatch(/too long/i)
   })
 
   it('rejects too many messages', () => {
