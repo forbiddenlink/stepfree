@@ -23,7 +23,6 @@ export type Watch = {
   keyComplexes: string[]
   createdAt: string
   confirmedAt?: string
-  confirmSentAt?: string[] // ISO times a confirmation email went out; drives the per-email cap and cooldown
   notified?: string[] // outage _ids already emailed, so each outage alerts once
 }
 

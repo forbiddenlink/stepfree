@@ -52,9 +52,51 @@ export function createLimiter(opts: {limit: number; windowMs: number; maxKeys?: 
   }
 }
 
-/** Vercel sets x-real-ip and overwrites x-forwarded-for, so neither is client-spoofable there. */
+/**
+ * Vercel sets x-real-ip itself. The fallback takes the LAST x-forwarded-for hop (appended by the
+ * nearest proxy), never the first, which is whatever the client chose to send.
+ */
 export function clientIp(req: Request): string {
-  return req.headers.get('x-real-ip')?.trim() || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const real = req.headers.get('x-real-ip')?.trim()
+  if (real) return real
+  const hops = req.headers.get('x-forwarded-for')?.split(',').map((h) => h.trim()).filter(Boolean)
+  return hops?.at(-1) || 'unknown'
+}
+
+/**
+ * Canonical mailbox for the per-email cap, so one inbox cannot be counted as many: NFKC, lowercase,
+ * drop "+tag" in the local part, and for Gmail also drop dots and fold googlemail.com.
+ */
+export function limitKeyEmail(email: string): string {
+  const [rawLocal = '', rawDomain = ''] = email.normalize('NFKC').trim().toLowerCase().split('@')
+  const domain = rawDomain === 'googlemail.com' ? 'gmail.com' : rawDomain
+  let local = rawLocal.split('+')[0] ?? ''
+  if (domain === 'gmail.com') local = local.replaceAll('.', '')
+  return `${local}@${domain}`
+}
+
+/** Reads a request body with a hard byte cap, so a chunked body with no Content-Length cannot be unbounded. */
+export async function readJsonLimited(req: Request, maxBytes: number): Promise<{ok: true; value: unknown} | {ok: false; tooLarge: boolean}> {
+  if (Number(req.headers.get('content-length') ?? 0) > maxBytes) return {ok: false, tooLarge: true}
+  if (!req.body) return {ok: false, tooLarge: false}
+  const reader = req.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for (;;) {
+    const {done, value} = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => {})
+      return {ok: false, tooLarge: true}
+    }
+    chunks.push(value)
+  }
+  try {
+    return {ok: true, value: JSON.parse(Buffer.concat(chunks).toString('utf8'))}
+  } catch {
+    return {ok: false, tooLarge: false}
+  }
 }
 
 type PartLike = {type?: unknown; text?: unknown}
@@ -68,6 +110,8 @@ export function checkChatSize(messages: MessageLike[]): string | null {
   if (messages.length > CHAT_LIMITS.maxMessages) return 'Too many messages in this conversation. Start a new chat.'
   let total = 0
   for (const m of messages) {
+    // A rider only types text. Tool, file, or data parts on a user message are an attempt to smuggle size past the text count.
+    if (m.role === 'user' && (m.parts ?? []).some((p) => p.type !== 'text')) return 'Unsupported content in message.'
     const n = textLength(m)
     // Assistant replies in history can be long; only a rider-typed message gets the per-message cap.
     if (m.role === 'user' && n > CHAT_LIMITS.maxMessageChars) return 'That message is too long. Shorten it and try again.'
@@ -82,3 +126,44 @@ const chatIp = createLimiter({limit: 20, windowMs: 5 * 60_000})
 /** False when this IP is over its per-instance budget. */
 export const checkWatchIp = (req: Request): boolean => watchIp.hit(clientIp(req))
 export const checkChatIp = (req: Request): boolean => chatIp.hit(clientIp(req))
+
+type SendEntry = {w: string; t: string}
+type LedgerDoc = {_id: string; _rev: string; sends?: SendEntry[]}
+type LedgerClient = {
+  getDocument: <T>(id: string) => Promise<(T & {_rev: string}) | undefined | null>
+  create: (doc: {_id: string; _type: string; sends: SendEntry[]}) => Promise<unknown>
+  patch: (id: string) => {ifRevisionId: (rev: string) => {set: (v: {sends: SendEntry[]}) => {commit: () => Promise<unknown>}}}
+}
+
+/**
+ * Atomically reserves one confirmation send for (email, watch). One ledger doc per canonical email
+ * holds every send, and the write is a compare-and-swap: `create` fails if the doc exists and
+ * `patch(...).ifRevisionId` fails if anyone wrote since we read. Only a request whose write
+ * succeeded gets 'send', so parallel requests cannot all pass the check.
+ */
+export async function reserveConfirmation(
+  client: LedgerClient,
+  ledgerId: string,
+  watchId: string,
+  now: number,
+): Promise<ConfirmDecision> {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const doc = await client.getDocument<LedgerDoc>(ledgerId)
+    const sends = doc?.sends ?? []
+    const pendingLast = sends.filter((e) => e.w === watchId).map((e) => e.t).sort().at(-1)
+    const decision = confirmDecision({sentAt: sends.map((e) => e.t), pendingLastSentAt: pendingLast, now})
+    if (decision !== 'send') return decision
+    const next = [...sends.filter((e) => now - Date.parse(e.t) < WATCH_LIMITS.dayMs), {w: watchId, t: new Date(now).toISOString()}]
+    try {
+      if (doc) await client.patch(ledgerId).ifRevisionId(doc._rev).set({sends: next}).commit()
+      else await client.create({_id: ledgerId, _type: 'watchSendLedger', sends: next})
+      return 'send'
+    } catch (err) {
+      const status = (err as {statusCode?: number}).statusCode
+      if (status !== 409 && status !== 412) throw err
+      // Lost the race: re-read and re-evaluate against the winner's write.
+    }
+  }
+  // Heavy contention is itself abuse. Fail closed: no send.
+  return 'cap'
+}

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {CHAT_LIMITS, checkChatSize, clientIp, confirmDecision, createLimiter} from './limits'
+import {CHAT_LIMITS, checkChatSize, clientIp, confirmDecision, createLimiter, limitKeyEmail, readJsonLimited} from './limits'
 
 const H = 3_600_000
 const now = Date.parse('2026-10-13T12:00:00Z')
@@ -44,9 +44,9 @@ describe('createLimiter', () => {
 })
 
 describe('clientIp', () => {
-  it('prefers x-real-ip, then the first x-forwarded-for hop', () => {
+  it('prefers x-real-ip, then the LAST x-forwarded-for hop (the first is client-chosen)', () => {
     expect(clientIp(new Request('http://x', {headers: {'x-real-ip': '1.1.1.1', 'x-forwarded-for': '2.2.2.2'}}))).toBe('1.1.1.1')
-    expect(clientIp(new Request('http://x', {headers: {'x-forwarded-for': '2.2.2.2, 3.3.3.3'}}))).toBe('2.2.2.2')
+    expect(clientIp(new Request('http://x', {headers: {'x-forwarded-for': '6.6.6.6, 3.3.3.3'}}))).toBe('3.3.3.3')
     expect(clientIp(new Request('http://x'))).toBe('unknown')
   })
 })
@@ -70,5 +70,32 @@ describe('checkChatSize', () => {
 
   it('rejects too many messages', () => {
     expect(checkChatSize(Array.from({length: CHAT_LIMITS.maxMessages + 1}, () => msg('user', 'hi')))).toMatch(/too many/i)
+  })
+})
+
+describe('limitKeyEmail', () => {
+  it('collapses plus tags, case, gmail dots and googlemail', () => {
+    const k = limitKeyEmail('jane.doe@gmail.com')
+    for (const v of ['JaneDoe+a@gmail.com', 'j.a.n.e.d.o.e+b@googlemail.com', ' janedoe@GMAIL.COM ']) expect(limitKeyEmail(v)).toBe(k)
+  })
+  it('keeps dots significant on other domains', () => {
+    expect(limitKeyEmail('a.b@example.com')).not.toBe(limitKeyEmail('ab@example.com'))
+  })
+})
+
+describe('readJsonLimited', () => {
+  it('stops reading a chunked body past the cap', async () => {
+    const body = new ReadableStream({start(c) { c.enqueue(new Uint8Array(600)); c.enqueue(new Uint8Array(600)); c.close() }})
+    const r = await readJsonLimited(new Request('http://x', {method: 'POST', body, duplex: 'half'} as RequestInit), 1000)
+    expect(r).toEqual({ok: false, tooLarge: true})
+  })
+  it('parses a small body', async () => {
+    expect(await readJsonLimited(new Request('http://x', {method: 'POST', body: '{"a":1}'}), 1000)).toEqual({ok: true, value: {a: 1}})
+  })
+})
+
+describe('checkChatSize part smuggling', () => {
+  it('rejects non-text parts on a user message', () => {
+    expect(checkChatSize([{role: 'user', parts: [{type: 'file'}]}])).toMatch(/unsupported/i)
   })
 })
