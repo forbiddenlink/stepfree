@@ -49,6 +49,14 @@ describe('createLimiter', () => {
     for (const k of ['f1', 'f2', 'f3', 'f4']) l.hit(k, 2)
     expect(l.hit('attacker', 3)).toBe(false)
   })
+
+  it('admits a new client when every tracked key is blocked, without dropping any block', () => {
+    const l = createLimiter({limit: 1, windowMs: 1000, maxKeys: 2})
+    for (const k of ['a1', 'a2']) { l.hit(k, 0); l.hit(k, 0) }
+    expect(l.hit('newcomer', 1)).toBe(true)
+    expect(l.hit('a1', 2)).toBe(false)
+    expect(l.hit('a2', 2)).toBe(false)
+  })
 })
 
 describe('clientIp', () => {

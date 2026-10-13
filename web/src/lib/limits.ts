@@ -48,8 +48,10 @@ export function createLimiter(opts: {limit: number; windowMs: number; maxKeys?: 
             if (buckets.size < maxKeys) break
             if (v.count <= opts.limit) buckets.delete(k)
           }
-          // Every remaining key is blocked: fail closed for the new key rather than drop a block.
-          if (buckets.size >= maxKeys) return false
+          // Every remaining key is blocked. Admit the new key without tracking it: failing closed here
+          // would let a flood of blocked keys lock out every new client, and dropping a block would
+          // reset an attacker's counter. The durable per-email cap still bounds what gets sent.
+          if (buckets.size >= maxKeys) return true
         }
         buckets.set(key, {start: now, count: 1})
         return true
