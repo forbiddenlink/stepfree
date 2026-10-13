@@ -28,6 +28,7 @@
     "prettier": "3.9.8",
     "typescript": "5.9.3"
   },
+  "packageManager": "pnpm@10.34.5",
   "prettier": {
     "bracketSpacing": false,
     "printWidth": 100,
