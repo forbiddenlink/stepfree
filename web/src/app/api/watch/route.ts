@@ -1,6 +1,7 @@
 import {z} from 'zod'
 import {findStepFreeRoute} from '@/lib/graph'
 import {loadNetwork} from '@/lib/data'
+import {checkWatchIp, limitKeyEmail, readJsonLimited, reserveConfirmation} from '@/lib/limits'
 import {confirmEmail, newTokens, normalizeEmail, sendEmail, sha256, watchesClient, watchLink} from '@/lib/watch'
 
 const Body = z.object({
@@ -13,7 +14,12 @@ const Body = z.object({
 const ACCEPTED = {ok: true, message: 'Check your inbox and confirm to start alerts.'}
 
 export async function POST(req: Request): Promise<Response> {
-  const parsed = Body.safeParse(await req.json().catch(() => null))
+  if (!checkWatchIp(req)) {
+    return Response.json({ok: false, message: 'Too many requests. Try again later.'}, {status: 429, headers: {'Retry-After': '3600'}})
+  }
+  const raw = await readJsonLimited(req, 2_000)
+  if (!raw.ok && raw.tooLarge) return Response.json({ok: false, message: 'Request too large.'}, {status: 413})
+  const parsed = Body.safeParse(raw.ok ? raw.value : null)
   if (!parsed.success) return Response.json({ok: false, message: 'Enter a valid email address.'}, {status: 400})
   const {fromId, toId} = parsed.data
   const email = normalizeEmail(parsed.data.email)
@@ -32,6 +38,13 @@ export async function POST(req: Request): Promise<Response> {
   const existing = await client.getDocument<{status: string}>(_id)
   if (existing?.status === 'active') return Response.json(ACCEPTED)
 
+  // Durable abuse limits. The reservation is an atomic compare-and-swap on one ledger doc per
+  // canonical mailbox (a+tag@ and g.mail@gmail.com count as the same inbox), and email is sent only
+  // if it succeeded. Every branch returns ACCEPTED, so the reply never reveals known or throttled.
+  const now = Date.now()
+  const ledgerId = `sendledger-${sha256(limitKeyEmail(email)).slice(0, 32)}`
+  if ((await reserveConfirmation(client, ledgerId, _id, now)) !== 'send') return Response.json(ACCEPTED)
+
   const {token, tokenHash, stopToken} = newTokens()
   const watch = {fromId, toId, fromName: byId.get(fromId)!, toName: byId.get(toId)!}
   await client.createOrReplace({
@@ -44,7 +57,7 @@ export async function POST(req: Request): Promise<Response> {
     stopToken,
     status: 'pending',
     keyComplexes: route.keyComplexes,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(now).toISOString(),
     notified: [],
   })
   await sendEmail(email, confirmEmail(watch, token), `confirm-${tokenHash}`, watchLink('stop', stopToken))

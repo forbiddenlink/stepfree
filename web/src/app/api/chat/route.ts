@@ -12,6 +12,7 @@ import {
 import {z} from 'zod'
 import {buildEquipmentOnRoute, findStepFreeRoute, type Complex} from '@/lib/graph'
 import {loadNetwork, resolveStation} from '@/lib/data'
+import {CHAT_LIMITS, checkChatIp, checkChatSize, readJsonLimited} from '@/lib/limits'
 
 export const maxDuration = 60
 
@@ -189,14 +190,21 @@ const stepFreeRoute = tool({
 })
 
 export async function POST(req: Request): Promise<Response> {
-  const body = (await req.json().catch(() => null)) as {messages?: unknown} | null
-  if (!Array.isArray(body?.messages) || body.messages.length === 0 || body.messages.length > 50) {
+  if (!checkChatIp(req)) {
+    return Response.json({error: 'Too many requests. Wait a few minutes and try again.'}, {status: 429, headers: {'Retry-After': '300'}})
+  }
+  const raw = await readJsonLimited(req, CHAT_LIMITS.maxBodyBytes)
+  if (!raw.ok && raw.tooLarge) return Response.json({error: 'Request too large.'}, {status: 413})
+  const body = (raw.ok ? raw.value : null) as {messages?: unknown} | null
+  if (!Array.isArray(body?.messages) || body.messages.length === 0 || body.messages.length > CHAT_LIMITS.maxMessages) {
     return Response.json({error: 'Expected a non-empty messages array.'}, {status: 400})
   }
   const validated = await safeValidateUIMessages({messages: body.messages})
   if (!validated.success || validated.data.some((message) => message.role !== 'user' && message.role !== 'assistant')) {
     return Response.json({error: 'Invalid chat messages.'}, {status: 400})
   }
+  const tooBig = checkChatSize(validated.data)
+  if (tooBig) return Response.json({error: tooBig}, {status: 413})
   const messages = await convertToModelMessages(validated.data)
   let context: Awaited<ReturnType<typeof contextTools>>
   try {
