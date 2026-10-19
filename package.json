@@ -2,7 +2,7 @@
   "name": "stepfree",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@10.34.7",
   "scripts": {
     "ingest:static": "tsx --env-file=.env.local ingest/static.ts",
     "ingest:outages": "tsx --env-file=.env.local ingest/outages.ts",
