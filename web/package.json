@@ -31,7 +31,7 @@
     "typescript": "5.9.3",
     "vitest": "5.0.5"
   },
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@10.34.7",
   "pnpm": {
     "overrides": {
       "sharp@0": ">=0.35.5 <0.36.0",
