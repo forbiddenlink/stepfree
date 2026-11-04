@@ -58,14 +58,16 @@ export default function Home(): React.JSX.Element {
 
   const empty = messages.length === 0;
   return (
-    <>
+    <div className="flex h-dvh flex-col">
       <SiteBar label="NYC Transit Agent">
         <div className="flex items-center gap-2 rounded-sm border-2 border-white px-3 py-1 text-sm font-bold">
           <span className="h-2.5 w-2.5 rounded-full bg-[#3ddc97] motion-safe:animate-pulse" aria-hidden="true" />
           <span>MTA Outage Feed Live</span>
         </div>
       </SiteBar>
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-4">
+      {/* The page scrolls inside this region so the ask bar below it never overlays content. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+      <main className="mx-auto flex w-full max-w-4xl flex-col px-4 pb-4">
         <div className={empty ? "pb-8 pt-10 md:pt-14" : "py-5"}>
           <h1
             className={
@@ -215,8 +217,17 @@ export default function Home(): React.JSX.Element {
         <div ref={bottom} />
       </div>
 
+      </main>
+      <footer className="border-t-2 border-foreground">
+        <p className="mx-auto max-w-4xl px-4 py-4 text-sm text-muted">
+          Not affiliated with the MTA. Data from MTA public feeds via Sanity. Always confirm at mta.info before you travel.
+        </p>
+      </footer>
+      </div>
+      <div className="shrink-0 border-t-2 border-foreground bg-background">
       <form
-        className="sticky bottom-0 mt-4 flex gap-2 bg-background py-2"
+        aria-label="Ask StepFree"
+        className="mx-auto flex w-full max-w-4xl shrink-0 gap-2 bg-background px-4 py-2"
         onSubmit={(e) => {
           e.preventDefault();
           send(input);
@@ -242,12 +253,7 @@ export default function Home(): React.JSX.Element {
           Ask
         </button>
       </form>
-      </main>
-      <footer className="border-t-2 border-foreground">
-        <p className="mx-auto max-w-4xl px-4 py-4 text-sm text-muted">
-          Not affiliated with the MTA. Data from MTA public feeds via Sanity. Always confirm at mta.info before you travel.
-        </p>
-      </footer>
-    </>
+      </div>
+    </div>
   );
 }
