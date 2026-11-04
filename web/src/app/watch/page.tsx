@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteBar } from "@/components/SiteBar";
 import { WatchAction } from "./WatchAction";
 import { ElevatorIcon, AlertCircleIcon } from "@/components/Icons";
 
@@ -11,17 +12,10 @@ export default async function WatchPage({ searchParams }: PageProps<"/watch">): 
   const action = a === "confirm" || a === "stop" ? a : undefined;
   const token = typeof t === "string" ? t : undefined;
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-10">
-      <header className="mb-6 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-extrabold tracking-tight hover:opacity-80">
-          StepFree
-        </Link>
-        <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-          Elevator Alerts
-        </span>
-      </header>
-
-      <section className="rounded-2xl border border-line bg-surface p-6 shadow-xs">
+    <>
+      <SiteBar label="Elevator alerts" />
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-10">
+      <section className="border-2 border-foreground bg-surface p-6">
         <div className="flex items-center gap-2">
           <ElevatorIcon className="h-5 w-5 text-accent" />
           <h1 className="text-xl font-bold tracking-tight">
@@ -58,6 +52,7 @@ export default async function WatchPage({ searchParams }: PageProps<"/watch">): 
           ← Return to StepFree trip planner
         </Link>
       </p>
-    </main>
+      </main>
+    </>
   );
 }

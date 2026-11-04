@@ -64,7 +64,7 @@ export function ElevatorStatusCard({
         <div className="flex items-center gap-2">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-              status.hasOutages ? "bg-bad/15 text-bad" : "bg-ok/15 text-ok"
+              status.hasOutages ? "bg-bad/15 text-bad" : "bg-ok/10 text-ok"
             }`}
           >
             {status.hasOutages ? <AlertCircleIcon className="h-3 w-3" /> : <CheckCircleIcon className="h-3 w-3" />}
@@ -92,7 +92,7 @@ export function ElevatorStatusCard({
         )}
       </div>
 
-      <h3 className="mt-2 text-xl font-bold tracking-tight">{status.station}</h3>
+      <h2 className="mt-2 text-xl font-bold tracking-tight">{status.station}</h2>
       <p className="text-xs text-muted">
         {status.borough ? `${status.borough} · ` : ""}
         {elevators.length} {elevators.length === 1 ? "accessible elevator" : "accessible elevators"} tracked
@@ -115,15 +115,15 @@ export function ElevatorStatusCard({
                     {el.equipmentNo}
                   </span>
                   {el.isRedundant && (
-                    <span className="rounded bg-muted/15 px-1.5 py-0.5 text-[10px] text-muted font-normal">Redundant</span>
+                    <span className="rounded bg-muted/15 px-1.5 py-0.5 text-xs text-muted font-normal">Redundant</span>
                   )}
                 </div>
                 <p className="mt-1 text-xs text-foreground/90">{el.serving ?? el.shortDescription ?? "Elevator"}</p>
               </div>
               <div className="text-right whitespace-nowrap">
                 <span
-                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold ${
-                    el.isOut ? "bg-bad-solid text-white" : "bg-ok/15 text-ok"
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold ${
+                    el.isOut ? "bg-bad-solid text-white" : "bg-ok/10 text-ok"
                   }`}
                 >
                   {el.isOut ? <AlertCircleIcon className="h-2.5 w-2.5" /> : <CheckCircleIcon className="h-2.5 w-2.5" />}
@@ -131,7 +131,7 @@ export function ElevatorStatusCard({
                 </span>
                 {!el.isOut && el.availability12mo != null && (
                   <div className="mt-1">
-                    <p className="text-[10px] text-muted">{Math.round(el.availability12mo * 100)}% 12-mo reliability</p>
+                    <p className="text-xs text-muted">{Math.round(el.availability12mo * 100)}% 12-mo reliability</p>
                     <div className="mt-0.5 h-1 w-16 ml-auto overflow-hidden rounded-full bg-line/60">
                       <div
                         className="h-full rounded-full bg-ok"

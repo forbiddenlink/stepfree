@@ -37,7 +37,7 @@ export function StationChoice({
       <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
         Choose a station
       </span>
-      <h3 className="mt-2 text-lg font-bold">Which &ldquo;{query}&rdquo; do you mean?</h3>
+      <h2 className="mt-2 text-lg font-bold">Which &ldquo;{query}&rdquo; do you mean?</h2>
       <p className="mt-1 text-sm text-muted">
         More than one station matches. Pick your {role} so the trip uses the right elevators.
       </p>
