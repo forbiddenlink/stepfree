@@ -101,16 +101,16 @@ export function MarkdownText({ content }: { content: string }): React.JSX.Elemen
 
         if (block.startsWith("### ")) {
           return (
-            <h4 key={idx} className="pt-1 font-semibold text-base text-foreground">
+            <h3 key={idx} className="pt-1 font-semibold text-base text-foreground">
               {parseInline(block.replace(/^###\s+/, ""))}
-            </h4>
+            </h3>
           );
         }
         if (block.startsWith("## ")) {
           return (
-            <h3 key={idx} className="pt-2 font-bold text-lg text-foreground">
+            <h2 key={idx} className="pt-2 font-bold text-lg text-foreground">
               {parseInline(block.replace(/^##\s+/, ""))}
-            </h3>
+            </h2>
           );
         }
 

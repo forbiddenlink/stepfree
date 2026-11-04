@@ -8,6 +8,8 @@ import { ElevatorStatusCard, type StationStatusOutput } from "@/components/Eleva
 import { MarkdownText } from "@/components/MarkdownText";
 import { LineBullet } from "@/components/LineBullet";
 import { ElevatorIcon } from "@/components/Icons";
+import { RouteStrip } from "@/components/RouteStrip";
+import { SiteBar } from "@/components/SiteBar";
 
 const RATE_LIMITED = "RATE_LIMITED";
 
@@ -38,7 +40,8 @@ export default function Home(): React.JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" });
+    // Only follow the conversation once there is one; on first load the page must open at the top.
+    if (messages.length > 0) bottom.current?.scrollIntoView({ block: "end" });
   }, [messages]);
 
   const send = (text: string): void => {
@@ -53,79 +56,84 @@ export default function Home(): React.JSX.Element {
     }, 0);
   };
 
+  const empty = messages.length === 0;
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pb-4">
-      <header className="py-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold tracking-tight">StepFree</h1>
-            <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-              NYC Transit Agent
-            </span>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-ok/30 bg-ok/10 px-3 py-1 text-xs font-semibold text-ok">
-            <span className="h-2 w-2 rounded-full bg-ok motion-safe:animate-pulse" />
-            <span>MTA Outage Feed Live</span>
-          </div>
+    <>
+      <SiteBar label="NYC Transit Agent">
+        <div className="flex items-center gap-2 rounded-sm border-2 border-white px-3 py-1 text-sm font-bold">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#3ddc97] motion-safe:animate-pulse" aria-hidden="true" />
+          <span>MTA Outage Feed Live</span>
         </div>
-        <p className="mt-2.5 text-muted leading-relaxed">
-          The NYC subway without stairs. Live elevator outages, two years of elevator reliability, and MTA
-          accessibility policy, in one verified answer.
-        </p>
-      </header>
+      </SiteBar>
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-4">
+        <div className={empty ? "pb-8 pt-10 md:pt-14" : "py-5"}>
+          <h1
+            className={
+              empty
+                ? "max-w-3xl text-5xl font-extrabold leading-[1.02] tracking-tight md:text-7xl"
+                : "text-2xl font-extrabold tracking-tight"
+            }
+          >
+            The NYC subway without stairs.
+          </h1>
+          {empty && (
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-foreground md:text-xl">
+              Live elevator outages, two years of elevator reliability, and MTA accessibility policy, in one verified
+              answer.
+            </p>
+          )}
+        </div>
 
-      <div role="log" aria-label="Conversation" aria-live="polite" aria-busy={busy} className="flex-1 space-y-4">
-        {messages.length === 0 && (
-          <section aria-label="Example questions" className="space-y-4">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
-                Try a question
-              </p>
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {EXAMPLES.map((ex) => (
-                  <li key={ex.prompt}>
-                    <button
-                      type="button"
-                      onClick={() => send(ex.prompt)}
-                      className="group flex min-h-14 w-full flex-col justify-between rounded-xl border border-line bg-surface p-3.5 text-left transition-all hover:border-accent hover:bg-surface/90 focus-visible:outline-2 focus-visible:outline-accent shadow-2xs"
-                    >
-                      <div className="flex items-center justify-between gap-1 w-full">
-                        <span className="text-xs font-bold text-accent group-hover:underline">
-                          {ex.label}
+        <div role="log" aria-label="Conversation" aria-live="polite" aria-busy={busy} className="flex-1 space-y-4">
+          {empty && (
+            <div className="space-y-10">
+              <RouteStrip />
+
+              <section aria-labelledby="try-q">
+                <h2 id="try-q" className="mb-3 text-sm font-extrabold uppercase tracking-wider">
+                  Try a question
+                </h2>
+                <ul className="border-b-2 border-foreground">
+                  {EXAMPLES.map((ex) => (
+                    <li key={ex.prompt} className="border-t-2 border-foreground">
+                      <button
+                        type="button"
+                        onClick={() => send(ex.prompt)}
+                        className="group flex min-h-16 w-full flex-wrap items-center justify-between gap-x-6 gap-y-1 px-1 py-3 text-left hover:bg-foreground hover:text-background focus-visible:outline-offset-[-3px]"
+                      >
+                        <span className="flex flex-col">
+                          <span className="text-sm font-bold uppercase tracking-wide text-accent group-hover:text-background">
+                            {ex.label}
+                          </span>
+                          <span className="text-lg font-semibold leading-snug">{ex.prompt}</span>
                         </span>
                         {ex.lines && (
-                          <span className="flex shrink-0 items-center -space-x-1">
+                          <span className="flex shrink-0 items-center gap-1">
                             {ex.lines.map((l) => (
-                              <span key={l} className="scale-75 origin-right">
-                                <LineBullet line={l} />
-                              </span>
+                              <LineBullet key={l} line={l} />
                             ))}
                           </span>
                         )}
-                      </div>
-                      <span className="mt-1 text-sm font-medium text-foreground/90">
-                        {ex.prompt}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-            <div className="rounded-xl border border-line/60 bg-surface/50 p-4 text-xs text-muted leading-relaxed">
-              <p className="font-semibold text-foreground flex items-center gap-1.5">
-                <ElevatorIcon className="h-3.5 w-3.5 text-accent" />
-                <span>How StepFree answers</span>
-              </p>
-              <p className="mt-1">
-                A route depends on specific elevators at the stations where you board, change trains, and get off.
-                StepFree keeps stations, lines, elevators, live outages, and two years of monthly reliability as linked
-                records in Sanity, searches only paths where each of those elevators is working, and shows you
-                which ones it relied on. Policy answers come from MTA pages and the 2022 ADA settlement, with links.
-              </p>
+              <section aria-labelledby="how-q" className="border-l-8 border-accent bg-surface py-1 pl-5">
+                <h2 id="how-q" className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider">
+                  <ElevatorIcon className="h-5 w-5 text-accent" />
+                  <span>How StepFree answers</span>
+                </h2>
+                <p className="mt-2 max-w-3xl text-base leading-relaxed">
+                  A route depends on specific elevators at the stations where you board, change trains, and get off.
+                  StepFree keeps stations, lines, elevators, live outages, and two years of monthly reliability as
+                  linked records in Sanity, searches only paths where each of those elevators is working, and shows you
+                  which ones it relied on. Policy answers come from MTA pages and the 2022 ADA settlement, with links.
+                </p>
+              </section>
             </div>
-          </section>
-        )}
+          )}
 
         {messages.map((m) => (
           <article
@@ -208,7 +216,7 @@ export default function Home(): React.JSX.Element {
       </div>
 
       <form
-        className="sticky bottom-0 mt-4 flex gap-2 bg-background pt-2"
+        className="sticky bottom-0 mt-4 flex gap-2 bg-background py-2"
         onSubmit={(e) => {
           e.preventDefault();
           send(input);
@@ -224,19 +232,22 @@ export default function Home(): React.JSX.Element {
           onChange={(e) => setInput(e.target.value)}
           placeholder="From 72 St to Atlantic Av, no stairs…"
           autoComplete="off"
-          className="min-h-12 flex-1 rounded-xl border border-line bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-accent"
+          className="min-h-12 flex-1 rounded-sm border-2 border-foreground bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-accent"
         />
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="min-h-12 rounded-xl bg-accent-solid px-5 font-semibold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
+          className="min-h-12 rounded-sm bg-accent-solid px-6 text-lg font-bold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
         >
           Ask
         </button>
       </form>
-      <p className="mt-3 text-xs text-muted">
-        Not affiliated with the MTA. Data from MTA public feeds via Sanity. Always confirm at mta.info before you travel.
-      </p>
-    </main>
+      </main>
+      <footer className="border-t-2 border-foreground">
+        <p className="mx-auto max-w-4xl px-4 py-4 text-sm text-muted">
+          Not affiliated with the MTA. Data from MTA public feeds via Sanity. Always confirm at mta.info before you travel.
+        </p>
+      </footer>
+    </>
   );
 }

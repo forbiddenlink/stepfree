@@ -85,7 +85,7 @@ export function RouteCard({
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
               route.ok
-                ? "bg-ok/15 text-ok"
+                ? "bg-ok/10 text-ok"
                 : "bg-bad/15 text-bad"
             }`}
           >
@@ -100,10 +100,10 @@ export function RouteCard({
         </div>
       </div>
 
-      <h3 className="mt-2 text-xl font-bold tracking-tight">
+      <h2 className="mt-2 text-xl font-bold tracking-tight">
         {route.from ?? "Origin"} <span aria-hidden="true">→</span>
         <span className="sr-only">to</span> {route.to ?? "Destination"}
-      </h3>
+      </h2>
       {route.ok && route.basis && <p className="mt-1 text-xs text-muted">{route.basis}</p>}
 
       {route.ok && route.legs && route.legs.length > 0 ? (
@@ -142,7 +142,7 @@ export function RouteCard({
                         <p className="font-bold text-foreground text-base">
                           {leg.from}
                         </p>
-                        <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
+                        <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                           {isFirstLeg ? "Origin" : "Transfer Station"}
                         </span>
                       </div>
@@ -154,7 +154,7 @@ export function RouteCard({
                             {board.elevators.map((el) => (
                               <span
                                 key={el}
-                                className="inline-flex items-center gap-1 rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-[11px] font-bold text-foreground shadow-2xs"
+                                className="inline-flex items-center gap-1 rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-xs font-bold text-foreground shadow-2xs"
                               >
                                 <ElevatorIcon className="h-3 w-3 text-accent" />
                                 {el}
@@ -197,7 +197,7 @@ export function RouteCard({
                         <p className="font-bold text-foreground text-base">
                           {leg.to}
                         </p>
-                        <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
+                        <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                           {isLastLeg ? "Destination" : "Transfer Station"}
                         </span>
                       </div>
@@ -209,7 +209,7 @@ export function RouteCard({
                             {exit.elevators.map((el) => (
                               <span
                                 key={el}
-                                className="inline-flex items-center gap-1 rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-[11px] font-bold text-foreground shadow-2xs"
+                                className="inline-flex items-center gap-1 rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-xs font-bold text-foreground shadow-2xs"
                               >
                                 <ElevatorIcon className="h-3 w-3 text-accent" />
                                 {el}
@@ -263,7 +263,7 @@ export function RouteCard({
               <ElevatorIcon className="h-3.5 w-3.5 text-accent" />
               <span>Elevators at these stations</span>
             </p>
-            <span className="text-[11px] text-muted font-medium">
+            <span className="text-xs text-muted font-medium">
               {equipment.reduce((acc, st) => acc + st.elevators.length, 0)} units verified
             </span>
           </div>
@@ -296,12 +296,12 @@ export function RouteCard({
                               {el.equipmentNo}
                             </span>
                             {el.isRedundant && (
-                              <span className="rounded bg-muted/15 px-1.5 py-0.5 text-[10px] text-muted font-normal">
+                              <span className="rounded bg-muted/15 px-1.5 py-0.5 text-xs text-muted font-normal">
                                 (redundant)
                               </span>
                             )}
                             {usedElevators.has(el.equipmentNo) && (
-                              <span className="rounded-full border border-accent/40 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                              <span className="rounded-full border border-accent/40 px-2 py-0.5 text-xs font-semibold text-accent">
                                 on your route
                               </span>
                             )}
@@ -323,8 +323,8 @@ export function RouteCard({
                         </div>
                         <div className="text-right shrink-0 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                              el.isOut ? "bg-bad-solid text-white" : "bg-ok/15 text-ok"
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold ${
+                              el.isOut ? "bg-bad-solid text-white" : "bg-ok/10 text-ok"
                             }`}
                           >
                             {el.isOut ? <AlertCircleIcon className="h-2.5 w-2.5" /> : <CheckCircleIcon className="h-2.5 w-2.5" />}
@@ -332,7 +332,7 @@ export function RouteCard({
                           </span>
                           {!el.isOut && el.availability12mo != null && (
                             <div className="mt-1.5">
-                              <p className="text-[10px] font-medium text-muted">
+                              <p className="text-xs font-medium text-muted">
                                 {Math.round(el.availability12mo * 100)}% 12-mo uptime
                               </p>
                               <div className="mt-1 h-1 w-16 ml-auto overflow-hidden rounded-full bg-line/60">
