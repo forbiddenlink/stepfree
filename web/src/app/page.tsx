@@ -89,10 +89,7 @@ export default function Home(): React.JSX.Element {
             <div className="space-y-10">
               <RouteStrip />
 
-              <section aria-labelledby="try-q">
-                <h2 id="try-q" className="mb-3 text-sm font-extrabold uppercase tracking-wider">
-                  Try a question
-                </h2>
+              <section aria-label="Example questions">
                 <ul className="border-b-2 border-foreground">
                   {EXAMPLES.map((ex) => (
                     <li key={ex.prompt} className="border-t-2 border-foreground">
@@ -216,31 +213,33 @@ export default function Home(): React.JSX.Element {
       </div>
 
       <form
-        className="sticky bottom-0 mt-4 flex gap-2 bg-background py-2"
+        className="sticky bottom-0 mt-4 border-t-2 border-foreground bg-background pb-2 pt-2"
         onSubmit={(e) => {
           e.preventDefault();
           send(input);
         }}
       >
-        <label htmlFor="q" className="sr-only">
-          Ask about a step-free trip or an elevator
+        <label htmlFor="q" className="mb-2 block text-sm font-extrabold uppercase tracking-wider">
+          Try a question
         </label>
-        <input
-          ref={inputRef}
-          id="q"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="From 72 St to Atlantic Av, no stairs…"
-          autoComplete="off"
-          className="min-h-12 flex-1 rounded-sm border-2 border-foreground bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-accent"
-        />
-        <button
-          type="submit"
-          disabled={busy || !input.trim()}
-          className="min-h-12 rounded-sm bg-accent-solid px-6 text-lg font-bold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          Ask
-        </button>
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            id="q"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="From 72 St to Atlantic Av, no stairs…"
+            autoComplete="off"
+            className="min-h-12 flex-1 rounded-sm border-2 border-foreground bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-accent"
+          />
+          <button
+            type="submit"
+            disabled={busy || !input.trim()}
+            className="min-h-12 rounded-sm bg-accent-solid px-6 text-lg font-bold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            Ask
+          </button>
+        </div>
       </form>
       </main>
       <footer className="border-t-2 border-foreground">
