@@ -58,16 +58,14 @@ export default function Home(): React.JSX.Element {
 
   const empty = messages.length === 0;
   return (
-    <div className="flex h-dvh flex-col">
+    <>
       <SiteBar label="NYC Transit Agent">
         <div className="flex items-center gap-2 rounded-sm border-2 border-white px-3 py-1 text-sm font-bold">
           <span className="h-2.5 w-2.5 rounded-full bg-[#3ddc97] motion-safe:animate-pulse" aria-hidden="true" />
           <span>MTA Outage Feed Live</span>
         </div>
       </SiteBar>
-      {/* The page scrolls inside this region so the ask bar below it never overlays content. */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-      <main className="mx-auto flex w-full max-w-4xl flex-col px-4 pb-4">
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-4">
         <div className={empty ? "pb-8 pt-10 md:pt-14" : "py-5"}>
           <h1
             className={
@@ -91,10 +89,7 @@ export default function Home(): React.JSX.Element {
             <div className="space-y-10">
               <RouteStrip />
 
-              <section aria-labelledby="try-q">
-                <h2 id="try-q" className="mb-3 text-sm font-extrabold uppercase tracking-wider">
-                  Try a question
-                </h2>
+              <section aria-label="Example questions">
                 <ul className="border-b-2 border-foreground">
                   {EXAMPLES.map((ex) => (
                     <li key={ex.prompt} className="border-t-2 border-foreground">
@@ -217,43 +212,41 @@ export default function Home(): React.JSX.Element {
         <div ref={bottom} />
       </div>
 
+      <form
+        className="sticky bottom-0 mt-4 border-t-2 border-foreground bg-background pb-2 pt-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(input);
+        }}
+      >
+        <label htmlFor="q" className="mb-2 block text-sm font-extrabold uppercase tracking-wider">
+          Try a question
+        </label>
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            id="q"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="From 72 St to Atlantic Av, no stairs…"
+            autoComplete="off"
+            className="min-h-12 flex-1 rounded-sm border-2 border-foreground bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-accent"
+          />
+          <button
+            type="submit"
+            disabled={busy || !input.trim()}
+            className="min-h-12 rounded-sm bg-accent-solid px-6 text-lg font-bold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            Ask
+          </button>
+        </div>
+      </form>
       </main>
       <footer className="border-t-2 border-foreground">
         <p className="mx-auto max-w-4xl px-4 py-4 text-sm text-muted">
           Not affiliated with the MTA. Data from MTA public feeds via Sanity. Always confirm at mta.info before you travel.
         </p>
       </footer>
-      </div>
-      <div className="shrink-0 border-t-2 border-foreground bg-background">
-      <form
-        aria-label="Ask StepFree"
-        className="mx-auto flex w-full max-w-4xl shrink-0 gap-2 bg-background px-4 py-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send(input);
-        }}
-      >
-        <label htmlFor="q" className="sr-only">
-          Ask about a step-free trip or an elevator
-        </label>
-        <input
-          ref={inputRef}
-          id="q"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="From 72 St to Atlantic Av, no stairs…"
-          autoComplete="off"
-          className="min-h-12 flex-1 rounded-sm border-2 border-foreground bg-surface px-4 text-base focus-visible:outline-2 focus-visible:outline-accent"
-        />
-        <button
-          type="submit"
-          disabled={busy || !input.trim()}
-          className="min-h-12 rounded-sm bg-accent-solid px-6 text-lg font-bold text-white transition-opacity disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          Ask
-        </button>
-      </form>
-      </div>
-    </div>
+    </>
   );
 }
