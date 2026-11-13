@@ -4,6 +4,9 @@
 // Sanity `watches` dataset, so they hold across serverless instances. The IP limiter below is
 // in-memory and therefore PER INSTANCE: it blunts a single noisy client, it is not a global cap.
 
+import {Ratelimit} from '@upstash/ratelimit'
+import {Redis} from '@upstash/redis'
+
 const HOUR = 3_600_000
 
 export const WATCH_LIMITS = {
@@ -19,6 +22,14 @@ export const CHAT_LIMITS = {
   maxMessageChars: 2_000,
   maxTotalChars: 20_000,
   maxBodyBytes: 200_000,
+  /** Hard cap on tokens the model may generate per step (bounds real-money spend per call). */
+  maxOutputTokens: 1_000,
+  /** Tool-call steps per request (was 8). Route plan + status checks + final answer fits in 4. */
+  maxSteps: 4,
+  /** Global ceiling on chat requests per UTC day across all instances. Durable path only (needs Redis). */
+  maxRequestsPerDay: 500,
+  /** Per-client (IP) ceiling per UTC day, so one client cannot exhaust the global budget. */
+  maxRequestsPerClientPerDay: 60,
 }
 
 export type ConfirmDecision = 'send' | 'cooldown' | 'cap'
@@ -140,6 +151,71 @@ const chatIp = createLimiter({limit: 20, windowMs: 5 * 60_000})
 /** False when this IP is over its per-instance budget. */
 export const checkWatchIp = (req: Request): boolean => watchIp.hit(clientIp(req))
 export const checkChatIp = (req: Request): boolean => chatIp.hit(clientIp(req))
+
+let redis: Redis | null | undefined
+let durableChatIp: Ratelimit | undefined
+
+/** Redis client when UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are both set, else null. */
+function getRedis(): Redis | null {
+  if (redis !== undefined) return redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  redis = url && token ? new Redis({url, token}) : null
+  return redis
+}
+
+if (process.env.NODE_ENV === 'production' && !getRedis()) {
+  console.warn('[limits] UPSTASH_REDIS_REST_URL/TOKEN not set: chat rate limiter is per-instance and resets on cold start; no daily spend ceiling.')
+}
+
+export type ChatIpResult = 'ok' | 'ip'
+
+/**
+ * Cheap per-IP burst limit, run before the body is parsed. Durable when Upstash env is present,
+ * in-memory otherwise. A Redis error degrades to in-memory here only because this step never grants
+ * permission to spend: the paid call is gated separately by reserveChatSpend, which fails closed.
+ */
+export async function checkChatIpLimit(req: Request): Promise<ChatIpResult> {
+  const r = getRedis()
+  if (!r) return checkChatIp(req) ? 'ok' : 'ip'
+  try {
+    durableChatIp ??= new Ratelimit({redis: r, limiter: Ratelimit.fixedWindow(20, '5 m'), prefix: 'stepfree:chat:ip'})
+    const {success} = await durableChatIp.limit(clientIp(req))
+    return success ? 'ok' : 'ip'
+  } catch (err) {
+    console.error('durable chat IP limiter failed, using in-memory:', err instanceof Error ? err.message : err)
+    return checkChatIp(req) ? 'ok' : 'ip'
+  }
+}
+
+export type ChatSpend = 'ok' | 'client' | 'daily' | 'unavailable'
+
+/**
+ * Call after the request body has validated, right before the paid model call. Counts one unit
+ * against a per-client daily cap and the global daily ceiling.
+ *
+ * No Redis env: 'ok' (documented per-instance mode, no daily ceiling). Redis configured but
+ * erroring: 'unavailable', and the caller must NOT call the model (fail closed).
+ */
+export async function reserveChatSpend(req: Request): Promise<ChatSpend> {
+  const r = getRedis()
+  if (!r) return 'ok'
+  try {
+    const day = new Date().toISOString().slice(0, 10)
+    const ttl = 2 * 24 * 3600
+    const clientKey = `stepfree:chat:daily:${day}:ip:${clientIp(req)}`
+    const mine = await r.incr(clientKey)
+    if (mine === 1) await r.expire(clientKey, ttl)
+    if (mine > CHAT_LIMITS.maxRequestsPerClientPerDay) return 'client'
+    const globalKey = `stepfree:chat:daily:${day}:global`
+    const total = await r.incr(globalKey)
+    if (total === 1) await r.expire(globalKey, ttl)
+    return total > CHAT_LIMITS.maxRequestsPerDay ? 'daily' : 'ok'
+  } catch (err) {
+    console.error('durable chat spend counter failed, refusing paid call:', err instanceof Error ? err.message : err)
+    return 'unavailable'
+  }
+}
 
 type SendEntry = {w: string; t: string}
 type LedgerDoc = {_id: string; _rev: string; sends?: SendEntry[]}
