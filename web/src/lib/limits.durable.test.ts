@@ -14,7 +14,7 @@ vi.mock('@upstash/ratelimit', () => ({
 
 const req = () => new Request('http://x', {headers: {'x-real-ip': '9.9.9.9'}})
 
-describe('checkChatBudget', () => {
+describe('chat spend guard', () => {
   beforeEach(() => {
     vi.resetModules()
     incr.mockReset()
@@ -32,11 +32,12 @@ describe('checkChatBudget', () => {
   it('uses the in-memory limiter without Redis env and never calls Redis', async () => {
     vi.stubEnv('UPSTASH_REDIS_REST_URL', '')
     vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', '')
-    const {checkChatBudget} = await import('./limits')
+    const {checkChatIpLimit, reserveChatSpend} = await import('./limits')
     const out: string[] = []
-    for (let i = 0; i < 21; i++) out.push(await checkChatBudget(req()))
+    for (let i = 0; i < 21; i++) out.push(await checkChatIpLimit(req()))
     expect(out[0]).toBe('ok')
     expect(out[20]).toBe('ip')
+    expect(await reserveChatSpend(req())).toBe('ok')
     expect(limit).not.toHaveBeenCalled()
     expect(incr).not.toHaveBeenCalled()
   })
@@ -47,33 +48,49 @@ describe('checkChatBudget', () => {
       vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'x')
     })
 
-    it('allows under the daily ceiling and sets a TTL on the first hit', async () => {
-      limit.mockResolvedValue({success: true})
-      incr.mockResolvedValue(1)
-      const {checkChatBudget} = await import('./limits')
-      expect(await checkChatBudget(req())).toBe('ok')
-      expect(expire).toHaveBeenCalledTimes(1)
-    })
-
-    it('returns daily once over the ceiling', async () => {
-      limit.mockResolvedValue({success: true})
-      const {checkChatBudget, CHAT_LIMITS} = await import('./limits')
-      incr.mockResolvedValue(CHAT_LIMITS.maxRequestsPerDay + 1)
-      expect(await checkChatBudget(req())).toBe('daily')
-    })
-
-    it('returns ip when the durable per-IP limit trips, without counting the day', async () => {
+    it('IP check trips on the durable limiter and does not count the daily budget', async () => {
       limit.mockResolvedValue({success: false})
-      const {checkChatBudget} = await import('./limits')
-      expect(await checkChatBudget(req())).toBe('ip')
+      const {checkChatIpLimit} = await import('./limits')
+      expect(await checkChatIpLimit(req())).toBe('ip')
       expect(incr).not.toHaveBeenCalled()
     })
 
-    it('falls back to in-memory when Redis throws', async () => {
-      limit.mockRejectedValue(new Error('boom'))
+    it('reserve allows under the caps and sets TTLs on first hits', async () => {
+      incr.mockResolvedValue(1)
+      const {reserveChatSpend} = await import('./limits')
+      expect(await reserveChatSpend(req())).toBe('ok')
+      expect(expire).toHaveBeenCalledTimes(2)
+    })
+
+    it('reserve returns daily over the global ceiling', async () => {
+      const {reserveChatSpend, CHAT_LIMITS} = await import('./limits')
+      incr.mockResolvedValueOnce(1).mockResolvedValueOnce(CHAT_LIMITS.maxRequestsPerDay + 1)
+      expect(await reserveChatSpend(req())).toBe('daily')
+    })
+
+    it('reserve returns client over the per-client cap without touching the global counter', async () => {
+      const {reserveChatSpend, CHAT_LIMITS} = await import('./limits')
+      incr.mockResolvedValueOnce(CHAT_LIMITS.maxRequestsPerClientPerDay + 1)
+      expect(await reserveChatSpend(req())).toBe('client')
+      expect(incr).toHaveBeenCalledTimes(1)
+    })
+
+    it('reserve fails closed (unavailable) when Redis throws', async () => {
+      incr.mockRejectedValue(new Error('boom'))
       vi.spyOn(console, 'error').mockImplementation(() => {})
-      const {checkChatBudget} = await import('./limits')
-      expect(await checkChatBudget(req())).toBe('ok')
+      const {reserveChatSpend} = await import('./limits')
+      expect(await reserveChatSpend(req())).toBe('unavailable')
+    })
+
+    it('a spoofed X-Forwarded-For does not change the counted client key', async () => {
+      incr.mockResolvedValue(1)
+      const {reserveChatSpend} = await import('./limits')
+      const spoof = (xff: string) => new Request('http://x', {headers: {'x-real-ip': '1.2.3.4', 'x-forwarded-for': xff}})
+      await reserveChatSpend(spoof('6.6.6.6'))
+      await reserveChatSpend(spoof('7.7.7.7'))
+      const keys = incr.mock.calls.map((c) => c[0] as string).filter((k) => k.includes(':ip:'))
+      expect(new Set(keys).size).toBe(1)
+      expect(keys[0]).toContain('1.2.3.4')
     })
   })
 })
