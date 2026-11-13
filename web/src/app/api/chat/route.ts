@@ -12,7 +12,7 @@ import {
 import {z} from 'zod'
 import {buildEquipmentOnRoute, findStepFreeRoute, type Complex} from '@/lib/graph'
 import {loadNetwork, resolveStation} from '@/lib/data'
-import {CHAT_LIMITS, checkChatIp, checkChatSize, readJsonLimited} from '@/lib/limits'
+import {CHAT_LIMITS, checkChatBudget, checkChatSize, readJsonLimited} from '@/lib/limits'
 
 export const maxDuration = 60
 
@@ -190,7 +190,11 @@ const stepFreeRoute = tool({
 })
 
 export async function POST(req: Request): Promise<Response> {
-  if (!checkChatIp(req)) {
+  const budget = await checkChatBudget(req)
+  if (budget === 'daily') {
+    return Response.json({error: 'StepFree chat has reached its daily limit. Please try again tomorrow, and check mta.info/elevators for live status.'}, {status: 429, headers: {'Retry-After': '3600'}})
+  }
+  if (budget === 'ip') {
     return Response.json({error: 'Too many requests. Wait a few minutes and try again.'}, {status: 429, headers: {'Retry-After': '300'}})
   }
   const raw = await readJsonLimited(req, CHAT_LIMITS.maxBodyBytes)
@@ -222,7 +226,9 @@ export async function POST(req: Request): Promise<Response> {
       : INSTRUCTIONS,
     messages,
     tools: {...context.tools, stepFreeRoute, checkStationElevators},
-    stopWhen: isStepCount(8),
+    stopWhen: isStepCount(CHAT_LIMITS.maxSteps),
+    // Caps spend per step on a public, unauthenticated endpoint.
+    maxOutputTokens: CHAT_LIMITS.maxOutputTokens,
     // A rider closing the tab stops the model run and releases both Context sessions.
     abortSignal: req.signal,
     onAbort: context.close,
