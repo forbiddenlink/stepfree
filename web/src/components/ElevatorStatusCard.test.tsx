@@ -27,7 +27,7 @@ describe('ElevatorStatusCard', () => {
     expect(html).toContain('161 St-Yankee Stadium')
     expect(html).toContain('EL201')
     expect(html).toContain('Street to mezzanine')
-    expect(html).toContain('All Elevators Operational')
+    expect(html).toContain('No outages reported for tracked elevators')
     expect(html).toContain('99% 12-mo reliability')
   })
 
@@ -70,5 +70,31 @@ describe('ElevatorStatusCard', () => {
     )
     expect(html).toContain('Station not found')
     expect(html).toContain('Narnia Station')
+  })
+})
+
+
+describe('station accessibility evidence', () => {
+  const render = (adaStatus?: 'full' | 'partial' | 'none') => renderToStaticMarkup(
+    <ElevatorStatusCard status={{ok: true, station: 'Synthetic station', adaStatus, elevators: [], hasOutages: false}} />
+  )
+  it('does not turn an empty equipment list into an operational guarantee', () => {
+    const html = render('full')
+    expect(html).toContain('Elevator status unknown')
+    expect(html).toContain('No accessible elevator equipment is indexed for this station.')
+    expect(html).not.toContain('All Elevators Operational')
+  })
+  it('distinguishes non-accessible stations from partial accessibility', () => {
+    const html = render('none')
+    expect(html).toContain('Not listed as ADA accessible')
+    expect(html).not.toContain('Partial Accessibility')
+  })
+  it('explains that partial access does not cover every platform', () => {
+    const html = render('partial')
+    expect(html).toContain('Partial Accessibility')
+    expect(html).toContain('Step-free access is not confirmed for every platform or direction.')
+  })
+  it('makes missing accessibility classification explicit', () => {
+    expect(render()).toContain('Station accessibility unknown')
   })
 })

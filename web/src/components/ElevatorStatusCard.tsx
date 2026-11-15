@@ -64,24 +64,22 @@ export function ElevatorStatusCard({
         <div className="flex items-center gap-2">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-              status.hasOutages ? "bg-bad/15 text-bad" : "bg-ok/10 text-ok"
+              elevators.length === 0 ? "bg-muted/15 text-muted" : status.hasOutages ? "bg-bad/15 text-bad" : "bg-ok/10 text-ok"
             }`}
           >
-            {status.hasOutages ? <AlertCircleIcon className="h-3 w-3" /> : <CheckCircleIcon className="h-3 w-3" />}
-            {status.hasOutages ? "Outage Reported" : "All Elevators Operational"}
+            {elevators.length === 0 || status.hasOutages ? <AlertCircleIcon className="h-3 w-3" /> : <CheckCircleIcon className="h-3 w-3" />}
+            {elevators.length === 0 ? "Elevator status unknown" : status.hasOutages ? "Outage Reported" : "No outages reported for tracked elevators"}
           </span>
-          {status.adaStatus && (
-            <span className="inline-flex items-center gap-1 text-xs text-muted">
+          <span className="inline-flex items-center gap-1 text-xs text-muted">
               {status.adaStatus === "full" ? (
                 <>
                   <WheelchairIcon className="h-3.5 w-3.5 text-ok" />
                   <span>ADA Accessible Station</span>
                 </>
               ) : (
-                "Partial Accessibility"
+                status.adaStatus === "partial" ? "Partial Accessibility" : status.adaStatus === "none" ? "Not listed as ADA accessible" : "Station accessibility unknown"
               )}
-            </span>
-          )}
+          </span>
         </div>
         {status.lines && status.lines.length > 0 && (
           <div className="flex items-center gap-1">
@@ -97,6 +95,17 @@ export function ElevatorStatusCard({
         {status.borough ? `${status.borough} · ` : ""}
         {elevators.length} {elevators.length === 1 ? "accessible elevator" : "accessible elevators"} tracked
       </p>
+
+      {status.adaStatus === "partial" && (
+        <p className="mt-3 text-sm text-muted">
+          Step-free access is not confirmed for every platform or direction.
+        </p>
+      )}
+      {elevators.length === 0 && (
+        <p className="mt-3 text-sm text-muted" role="status">
+          No accessible elevator equipment is indexed for this station. Verify access with the MTA before traveling.
+        </p>
+      )}
 
       {/* Elevators List: out-of-service first, so a quick scan hits the thing that matters before the reassuring rows. */}
       <div className="mt-4 space-y-2.5">
