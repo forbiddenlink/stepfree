@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "StepFree",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "StepFree - Step-free trips on the NYC subway with verified working elevators",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "StepFree: the NYC subway without stairs",
     description:
       "Step-free trips on the New York City subway, with the verified working ADA elevators each trip depends on.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
 };
 
