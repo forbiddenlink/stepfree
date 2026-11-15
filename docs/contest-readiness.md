@@ -1,5 +1,7 @@
 # StepFree: contest readiness and completion plan
 
+> Status as of 2026-11-15: this file is a snapshot from the Sanity Challenge submission period (entries closed 2026-10-04). It is not maintained as current documentation; see the root `README.md`.
+
 Assessment: September 23, 2026 (New York). Changes in this assessment are local and uncommitted; the public deployment still runs the previous code.
 
 ## Recommendation
