@@ -29,11 +29,13 @@ Code: [web/src/lib/graph.ts](web/src/lib/graph.ts), station matching in [web/src
 
 ## Run it
 
-Requires Node (see `.node-version`) and pnpm.
+Requires Node 22 (`.node-version` pins 22.23.4) and pnpm 10.
 
 ```bash
 pnpm install && pnpm --dir web install && pnpm --dir studio install
 ```
+
+Start the web app with `pnpm --dir web dev` and the Studio with `pnpm --dir studio dev`.
 
 ```bash
 pnpm check
@@ -45,7 +47,7 @@ Environment variables:
 
 - Ingest and alerts (root `.env.local`, GitHub Actions secrets): `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_WRITE_TOKEN`, `RESEND_API_KEY`, `STEPFREE_FROM`, `STEPFREE_SITE_URL`
 - Web app (Vercel): `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `SANITY_CONTEXT_TOKEN`, `SANITY_WRITE_TOKEN` (private `watches` dataset), `RESEND_API_KEY`, `STEPFREE_FROM`, `STEPFREE_SITE_URL`
-- Optional: `STEPFREE_MODEL`, `SANITY_CONTEXT_GROQ_ENDPOINT`, `SANITY_CONTEXT_KB_ENDPOINT`
+- Optional: `STEPFREE_MODEL`, `SANITY_CONTEXT_GROQ_ENDPOINT`, `SANITY_CONTEXT_KB_ENDPOINT`, and `UPSTASH_REDIS_REST_URL` with `UPSTASH_REDIS_REST_TOKEN` (durable rate limits; both must be set, otherwise limits are not shared across instances)
 
 The model runs through Vercel AI Gateway with OIDC, so no model provider key is needed.
 
@@ -62,3 +64,7 @@ The eval sends every case in `eval/cases.json` to the live app, paced for its ra
 - mta.info accessibility pages and the 2022 ADA settlement agreement (CIDNY v. MTA), in the Knowledge Base
 
 Not affiliated with the MTA. Always check mta.info/elevators before you travel.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

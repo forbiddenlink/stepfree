@@ -1,9 +1,12 @@
-# Sanity Clean Content Studio
+# StepFree Studio
 
-Congratulations, you have now installed the Sanity Content Studio, an open-source real-time content editing environment connected to the Sanity backend.
+Sanity Studio and content schema for StepFree. The schema types are in `schemaTypes/` and cover station complexes, lines, equipment, outages, and reliability history.
 
-Now you can do the following things:
+```bash
+pnpm install
+pnpm dev       # sanity dev
+pnpm build     # sanity build
+pnpm deploy    # sanity deploy
+```
 
-- [Read “getting started” in the docs](https://www.sanity.io/docs/introduction/getting-started?utm_source=readme)
-- [Join the Sanity community](https://www.sanity.io/community/join?utm_source=readme)
-- [Extend and build plugins](https://www.sanity.io/docs/content-studio/extending?utm_source=readme)
+The deployed Studio is at <https://stepfree.sanity.studio>. See the [root README](../README.md) for the full project.
