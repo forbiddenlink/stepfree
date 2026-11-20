@@ -14,6 +14,7 @@
     "@ai-sdk/mcp": "^2.0.54",
     "@ai-sdk/react": "^4.0.110",
     "@sanity/client": "^8.6.2",
+    "@sentry/nextjs": "^10.78.0",
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.41.0",
     "ai": "^7.0.107",
