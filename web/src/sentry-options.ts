@@ -10,6 +10,7 @@ export const sentryOptions = {
   tracesSampleRate: 0,
   beforeSend(event) {
     return {
+      type: event.type,
       event_id: event.event_id,
       timestamp: event.timestamp,
       platform: event.platform,
