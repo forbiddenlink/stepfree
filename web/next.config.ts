@@ -9,7 +9,7 @@ const cspReportOnly = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https://o4509096111112192.ingest.us.sentry.io",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
