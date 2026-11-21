@@ -1,9 +1,9 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import {GET} from './route'
-import {sanity} from '@/lib/data'
 import {captureMessage} from '@sentry/nextjs'
 
-vi.mock('@/lib/data', () => ({sanity: {fetch: vi.fn()}}))
+const {fetchTimestamp} = vi.hoisted(() => ({fetchTimestamp: vi.fn<() => Promise<string | null>>()}))
+vi.mock('@/lib/data', () => ({sanity: {fetch: fetchTimestamp}}))
 vi.mock('@sentry/nextjs', () => ({captureMessage: vi.fn(), flush: vi.fn()}))
 
 describe('outage feed freshness', () => {
@@ -19,25 +19,25 @@ describe('outage feed freshness', () => {
 
   it('requires the cron credential before reading the feed', async () => {
     expect((await GET(new Request(request.url))).status).toBe(401)
-    expect(sanity.fetch).not.toHaveBeenCalled()
+    expect(fetchTimestamp).not.toHaveBeenCalled()
   })
 
   it('accepts the last successful commit up to 45 minutes old', async () => {
-    vi.mocked(sanity.fetch).mockResolvedValue('2026-11-20T11:15:00Z')
+    fetchTimestamp.mockResolvedValue('2026-11-20T11:15:00Z')
     expect((await GET(request)).status).toBe(204)
     expect(captureMessage).not.toHaveBeenCalled()
   })
 
   it.each([null, 'invalid', '2026-11-20T11:14:59Z', '2026-11-20T12:01:00Z'])(
     'alerts for an unusable or stale timestamp (%s)', async value => {
-      vi.mocked(sanity.fetch).mockResolvedValue(value)
+      fetchTimestamp.mockResolvedValue(value)
       expect((await GET(request)).status).toBe(503)
       expect(captureMessage).toHaveBeenCalledOnce()
     },
   )
 
   it('alerts if the ingest record cannot be read', async () => {
-    vi.mocked(sanity.fetch).mockRejectedValue(new Error('unavailable'))
+    fetchTimestamp.mockRejectedValue(new Error('unavailable'))
     expect((await GET(request)).status).toBe(503)
     expect(captureMessage).toHaveBeenCalledOnce()
   })
