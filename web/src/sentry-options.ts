@@ -10,6 +10,10 @@ export const sentryOptions = {
   tracesSampleRate: 0,
   beforeSend(event) {
     return {
+      // Only this fixed operational message can pass through verbatim.
+      ...(event.message === 'StepFree outage feed freshness check failed'
+        ? {message: event.message, fingerprint: ['stepfree-feed-freshness']}
+        : {}),
       type: event.type,
       event_id: event.event_id,
       timestamp: event.timestamp,
