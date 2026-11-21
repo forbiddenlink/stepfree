@@ -35,7 +35,7 @@ async function main(): Promise<void> {
         isPlannedMaintenance: row.ismaintenanceoutage === 'Y',
         estimatedReturnAt: nyLocalToIso(row.estimatedreturntoservice),
         lastSeenAt: now,
-      }),
+      }).unset(['resolvedAt']),
     )
   }
 
